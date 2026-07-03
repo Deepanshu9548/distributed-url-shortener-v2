@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: url-shortener
+  profiles:
+    default: local
+  flyway:
+    enabled: false # migrations run programmatically per shard (ShardDataSourceConfig) and per control DB
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      jakarta.persistence.query.timeout: 1000
+
+server:
+  port: 8080
+  tomcat:
+    threads:
+      max: 200
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics,circuitbreakers
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      slo:
+        http.server.requests: 10ms,25ms,50ms,100ms,200ms,500ms,1s
+
+app:
+  node-id: ${NODE_ID:1}
+  base-url: ${APP_BASE_URL:http://localhost:8080}
+  snowflake:
+    epoch: 2024-01-01T00:00:00Z
+
+ratelimit:
+  enabled: true
+  limiters:
+    write:    { capacity: 10,  refill-per-minute: 10,  fail-open: false }
+    redirect: { capacity: 100, refill-per-minute: 100, fail-open: true }
+    auth:     { capacity: 5,   refill-per-minute: 5,   fail-open: false }
