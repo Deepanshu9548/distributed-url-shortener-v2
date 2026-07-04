@@ -38,7 +38,6 @@ commits (re-tagging the checkpoints afterwards).
 | M3-G observability (metrics, dashboards, logs) | ⬜ | — |
 | M4 load + packaging (JMeter, README, demo, defense notes) | ⬜ | — |
 
-
 ## NEXT
 Execute M1-D (analytics track, territory `analytics/` + `events/`). Frozen
 scope (ADR-006/007/008):
