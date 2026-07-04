@@ -10,6 +10,19 @@
   Default `mvn verify` runs unit + contract tests only.
 - Java 25 toolchain locally, project targets release 17 (works fine).
 
+## ⚠️ SECURITY TODO (before any `git push` / publishing this repo)
+`.claude/settings.json` holds a live local API key and is TRACKED by git
+(since m0). It has been added to .gitignore, but the untrack command
+(`git rm --cached .claude/settings.json`) has been repeatedly blocked by
+the auto-mode Bash classifier — the user must run it manually:
+```
+git rm --cached .claude/settings.json
+git commit -m "chore: untrack local credentials file"
+```
+Then, before any push: either rotate the key (accepting the dead key in
+history) or rewrite history to purge the file from m0/m1-a/m1-b/m1-e
+commits (re-tagging the checkpoints afterwards).
+
 ## Milestone status
 
 | Milestone | Status | Checkpoint tag |
@@ -17,31 +30,69 @@
 | M0 foundation (skeleton, contracts, stubs, compose, CI, docs) | ✅ DONE | `checkpoint/m0` |
 | M1-A core (Snowflake, Base62, shorten/redirect, cache-aside) | ✅ DONE | `checkpoint/m1-a` |
 | M1-B data (hash ring, shard routing, replicas) | ✅ DONE | `checkpoint/m1-b` |
-| M1-C auth (JWT, users, ownership CRUD) | ⬜ | — |
+| M1-E rate limiting (Lua token bucket, filter) | ✅ DONE | `checkpoint/m1-e` |
+| M1-C auth (JWT, users, ownership CRUD) | ⬜ next | — |
 | M1-D analytics (Kafka, consumers, stats) | ⬜ | — |
-| M1-E rate limiting (Lua token bucket, filter) | ⬜ next | — |
 | M2 integration (swap stubs, filter order, e2e) | ⬜ | — |
 | M3-F resilience (breakers, chaos, degradation matrix) | ⬜ | — |
 | M3-G observability (metrics, dashboards, logs) | ⬜ | — |
 | M4 load + packaging (JMeter, README, demo, defense notes) | ⬜ | — |
 
 ## NEXT
-Execute M1-E (rate-limit track, territory `ratelimit/` + `resources/lua/`):
-Redis token bucket in an atomic Lua script per ADR-005 — hash-tag keys (e.g.
-`rl:{<subject>}:<limiter>` so all keys of one bucket share a slot), limiters
-write/redirect/auth with config already present in application.yml
-(`ratelimit` section: capacity, refill-per-minute, fail-open). Semantics
-frozen: write/auth fail-CLOSED, redirect fail-OPEN when Redis is unavailable
-(surface via RateLimitResult.storeUnavailable, decide in the filter). Must
-supersede the `AllowAllRateLimiter` stub the same way M1-B superseded
-SingleShardRouter: real bean `@Primary` + `@ConditionalOnProperty` on the
-feature flag (`ratelimit.enabled`), stub stays unconditional; verify Spring
-resolves the primary cleanly and the stub still compiles. Metrics: lowercase
-dot-separated, allowed labels only (limiter, outcome). Tests must run without
-Docker (script logic testable via embedded/fake or unit-level seams; real
-Redis behavior behind `@Tag("docker")`). Then remaining track order: C → D.
-Each track: implement in its owned territory (see docs/OWNERSHIP.md), pass its
-contract tests, `mvn verify` green, commit `checkpoint/m1-<track>`.
+Execute M1-C (auth track, territory `auth/`). Frozen scope:
+- **Control DB (ADR-010)**: OWN qualified DataSource + EntityManagerFactory +
+  TransactionManager (do NOT share the shard `routingDataSource`, which is
+  `@Primary` when sharding is on). Flyway location
+  `classpath:db/migration/control` (new). Config keys under `app.control-db`
+  (env-driven; independent of `SHARD*_URL`).
+- **Schema (control DB)**: `users` (id BIGINT PK snowflake OR bigserial —
+  pick snowflake to reuse the generator + stay off DB sequences; email
+  citext unique, password_hash bcrypt, created_at); `user_links` (user_id,
+  short_code PK+FK-ish, created_at) — this is the LinkIndex fed by
+  Track D's link-events consumer; C DEFINES the table + a read-only
+  `LinkIndexRepository` and hands it to Track D.
+- **JWT**: access 15m HS256 (secret from `JWT_SECRET`, already in
+  `.env.example`), refresh 7d rotation (persist refresh-family/session id
+  in Redis or control DB — choose Redis with fail-OPEN denylist per
+  frozen decisions; access token bears user id + roles).
+- **Endpoints under `/api/auth/**`** (rate-limited by M1-E as `auth`):
+  `POST /register` (email+password → 201 minimal profile),
+  `POST /login` (→ access+refresh),
+  `POST /refresh` (rotate),
+  `POST /logout` (denylist the refresh family + current access token JTI).
+- **Spring Security config**: public paths = `GET /{code}` (regex-guarded
+  as in the redirect controller), `POST /api/auth/**`, `/actuator/health`,
+  `/actuator/prometheus`, `/actuator/info`, `/swagger-ui/**`, `/v3/api-docs/**`;
+  everything else under `/api/**` → JWT-authenticated. Filter order (with
+  M1-E in mind, per its "Notes"): `InstanceHeaderFilter` (HIGHEST) →
+  request-id (M3-G will add) → `RateLimitFilter` → JWT auth →
+  authorization. `RateLimitFilter` must run BEFORE JWT auth so that
+  `POST /api/auth/login` gets IP-bucketed (no principal yet) and other
+  authenticated writes get user-bucketed (M1-E already reads
+  SecurityContextHolder → wire the filters in that order).
+- **Ownership CRUD** on `/api/links` for the caller's own links:
+  `GET /api/links` (paged list of the caller's short codes via `user_links`),
+  `GET /api/links/{code}` (already public metadata read from M1-A — decide:
+  keep public per README, or gate; frozen answer = keep public, but a new
+  `GET /api/me/links` gives the paged user list),
+  `PUT /api/links/{code}` (owner-only: update long_url/expires_at),
+  `DELETE /api/links/{code}` (owner-only: soft-delete? frozen = hard delete
+  + LinkEvent.DELETED). Ownership check reads `user_links` in the control DB
+  (fast, off the shard hot path).
+- **Supersede pattern**: no stub to supersede for auth (Spring Security is
+  the "stub" via default in-memory user + password log line — replace with
+  our JwtAuthenticationFilter + UserDetailsService).
+- **Testing**: unit tests for JwtService (sign/verify, exp, refresh
+  rotation), UserService (bcrypt, register/login idempotency), controller
+  slices for /api/auth/** endpoints, security config (public vs protected
+  routes), ownership guard. All Docker-free — no Postgres needed in unit
+  tests (repositories mocked). Control-DB migration ITs behind `@Tag("docker")`.
+
+Each track: implement in its owned territory (see docs/OWNERSHIP.md), pass
+its contract tests, `mvn verify` green, commit `checkpoint/m1-<track>`.
+After C: **M1-D** (analytics: Kafka publisher supersedes NoopPublisher,
+click + link-events consumers, `link-events` feeds `user_links`; ADR-006/
+007/008 frozen).
 
 ### Notes from M1-A for later tracks
 - Shard schema frozen in `src/main/resources/db/migration/shard/V1__create_links.sql`:
@@ -108,6 +159,44 @@ contract tests, `mvn verify` green, commit `checkpoint/m1-<track>`.
   replica entrypoints); M1-B only added app env (SHARDING_ENABLED=true) and
   replica depends_on. Docker still absent locally → compose stack + sharded
   end-to-end remain pending CI/manual validation (M2 integration).
+
+### Notes from M1-E for later tracks
+- Package `ratelimit/`. Beans (both @ConditionalOnProperty on
+  `ratelimit.enabled=true`, matchIfMissing=true so unit slices work):
+  `RedisTokenBucketRateLimiter` (@Primary — wins over the AllowAllRateLimiter
+  stub) and `RateLimitFilter`. Turning the flag off drops both → the stub
+  becomes the sole `RateLimiter` and no filter runs.
+- Atomic Lua script at `src/main/resources/lua/token_bucket.lua`. KEYS[1]=key,
+  ARGV = capacity, refill_per_ms (double), now_ms, requested. Returns
+  {allowed, retry_after_ms}. Deterministic (clock via ARGV) → Redis Cluster /
+  replication safe. PEXPIRE = 2×(capacity/refill_per_ms) so idle buckets
+  self-clean. Guards against clock-backwards by clamping elapsed to 0.
+- Bucket key format (Track C's JWT filter will drive this):
+  `rl:{<subject>}:<limiter>` — hash-tag braces around SUBJECT.
+  Subject: `user:<username>` when SecurityContextHolder has a non-anonymous
+  authentication; else `ip:<addr>` (first X-Forwarded-For entry, else
+  remoteAddr). XFF is trusted blindly — javadoc'd; nginx sets it in compose.
+- **Filter ordering (M2 must wire this)**: `InstanceHeaderFilter`
+  (HIGHEST_PRECEDENCE, already set) → request-id (M3-G) → `RateLimitFilter`
+  → JWT auth (M1-C) → Spring Security authz. Ordering matters: login
+  requests hit rate limit BEFORE authentication (IP-bucketed);
+  authenticated writes hit rate limit AFTER (user-bucketed via
+  SecurityContextHolder). M1-E leaves `@Order` unset so M2 owns this.
+- Metric: `ratelimit.decisions` tags `limiter=<name>,
+  outcome=allowed|denied|fail_open|fail_closed` (allowed labels only —
+  NEVER key/subject).
+- Failure policy is PER LIMITER via `ratelimit.limiters.<name>.fail-open`.
+  application.yml already has: write/auth failOpen=false, redirect
+  failOpen=true. Filter translates fail-closed store-unavailable → 503
+  {"error":"rate limiter unavailable"}; denied → 429 with Retry-After
+  header (ceil seconds, min 1) + {"error":"rate limit exceeded"}.
+- Routing table (first-match): `/api/auth/**` → auth; `/api/links**` +
+  write method → write; single-segment `/{code}` regex GET
+  (excludes /api/, /actuator/, /swagger-ui/, /v3/api-docs, /favicon.ico)
+  → redirect; anything else → chain.doFilter unchanged (no limit).
+- NO docker IT for the Lua script yet (unit-mocked template + inline
+  algorithm review). Add when Docker becomes available or in the M2
+  integration pass.
 
 ## Decisions already frozen (do not re-derive — see docs/adr/)
 Snowflake 41/10/12 epoch 2024-01-01 · Base62 · 302 not 301 · murmur3_32_fixed +
