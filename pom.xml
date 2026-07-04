@@ -18,8 +18,8 @@
     <description>Portfolio-grade distributed URL shortener: sharding, consistent hashing, async analytics, resilience</description>
 
     <properties>
-        <java.version>17</java.version>
-        <maven.compiler.release>17</maven.compiler.release>
+        <java.version>25</java.version>
+        <maven.compiler.release>25</maven.compiler.release>
         <guava.version>33.3.1-jre</guava.version>
         <jjwt.version>0.12.6</jjwt.version>
         <resilience4j.version>2.2.0</resilience4j.version>
@@ -192,6 +192,17 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <!-- Spring-boot-starter-parent's config leaks the JDK's default bytecode
+                         version through (v69 for JDK 25) despite maven.compiler.release=17
+                         — force it explicitly so Spring 6's ASM can read the test classes. -->
+                    <release>17</release>
+                    <testRelease>17</testRelease>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
