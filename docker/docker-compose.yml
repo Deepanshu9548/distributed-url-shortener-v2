@@ -7,9 +7,14 @@ x-app-common: &app-common
   environment: &app-env
     SPRING_PROFILES_ACTIVE: docker
     JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+    # Track B: real consistent-hash router + per-shard datasources.
+    # JDBC URLs default to the compose hostnames in application.yml.
+    SHARDING_ENABLED: "true"
   depends_on:
     shard1-primary: { condition: service_healthy }
+    shard1-replica: { condition: service_healthy }
     shard2-primary: { condition: service_healthy }
+    shard2-replica: { condition: service_healthy }
     control-db: { condition: service_healthy }
     redis: { condition: service_healthy }
     kafka: { condition: service_healthy }

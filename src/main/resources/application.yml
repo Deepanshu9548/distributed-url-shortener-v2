@@ -39,6 +39,36 @@ app:
   base-url: ${APP_BASE_URL:http://localhost:8080}
   snowflake:
     epoch: 2024-01-01T00:00:00Z
+  # Track B (ADR-002): consistent-hash sharding. Disabled locally (the
+  # SingleShardRouter stub serves); compose/CI enable via SHARDING_ENABLED=true.
+  # JDBC defaults use the compose network hostnames; host-side runs override
+  # via env (compose maps ports 5433/5434 shard1, 5435/5436 shard2).
+  sharding:
+    enabled: ${SHARDING_ENABLED:false}
+    vnodes: 150
+    shards:
+      - name: shard1
+        primary:
+          jdbc-url: ${SHARD1_PRIMARY_URL:jdbc:postgresql://shard1-primary:5432/shortener}
+          username: ${SHARD_DB_USER:shortener}
+          password: ${SHARD_DB_PASSWORD:shortener}
+          pool-size: ${SHARD_POOL_SIZE:10}
+        replica:
+          jdbc-url: ${SHARD1_REPLICA_URL:jdbc:postgresql://shard1-replica:5432/shortener}
+          username: ${SHARD_DB_USER:shortener}
+          password: ${SHARD_DB_PASSWORD:shortener}
+          pool-size: ${SHARD_POOL_SIZE:10}
+      - name: shard2
+        primary:
+          jdbc-url: ${SHARD2_PRIMARY_URL:jdbc:postgresql://shard2-primary:5432/shortener}
+          username: ${SHARD_DB_USER:shortener}
+          password: ${SHARD_DB_PASSWORD:shortener}
+          pool-size: ${SHARD_POOL_SIZE:10}
+        replica:
+          jdbc-url: ${SHARD2_REPLICA_URL:jdbc:postgresql://shard2-replica:5432/shortener}
+          username: ${SHARD_DB_USER:shortener}
+          password: ${SHARD_DB_PASSWORD:shortener}
+          pool-size: ${SHARD_POOL_SIZE:10}
 
 ratelimit:
   enabled: true
