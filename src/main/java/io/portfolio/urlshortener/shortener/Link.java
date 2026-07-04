@@ -82,4 +82,15 @@ public class Link {
     public boolean isCustomAlias() {
         return customAlias;
     }
+
+    // Mutators for owner-driven updates (Track C, ownership CRUD). Only
+    // {@code longUrl} and {@code expiresAt} are ever settable — the short
+    // code, snowflake id, owner and creation time are immutable.
+    public void setLongUrl(String longUrl) {
+        this.longUrl = longUrl;
+    }
+
+    public void setExpiresAt(Instant expiresAt) {
+        this.expiresAt = expiresAt;
+    }
 }
