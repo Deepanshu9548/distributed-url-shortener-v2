@@ -23,7 +23,7 @@ import java.time.Instant;
 public class IdempotencyKey {
 
     @Id
-    @Column(name = "key", length = 128)
+    @Column(name = "\"key\"", length = 128)
     private String key;
 
     @Column(name = "short_code", nullable = false, length = 32)

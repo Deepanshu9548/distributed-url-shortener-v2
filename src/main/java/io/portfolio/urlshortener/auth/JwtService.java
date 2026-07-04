@@ -44,6 +44,7 @@ public class JwtService {
     private final String issuer;
     private final Clock clock;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public JwtService(JwtProperties props) {
         this(props, Clock.systemUTC());
     }
