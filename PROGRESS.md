@@ -15,8 +15,8 @@
 | Milestone | Status | Checkpoint tag |
 |---|---|---|
 | M0 foundation (skeleton, contracts, stubs, compose, CI, docs) | ✅ DONE | `checkpoint/m0` |
-| M1-A core (Snowflake, Base62, shorten/redirect, cache-aside) | ⬜ next | — |
-| M1-B data (hash ring, shard routing, replicas) | ⬜ | — |
+| M1-A core (Snowflake, Base62, shorten/redirect, cache-aside) | ✅ DONE | `checkpoint/m1-a` |
+| M1-B data (hash ring, shard routing, replicas) | ⬜ next | — |
 | M1-C auth (JWT, users, ownership CRUD) | ⬜ | — |
 | M1-D analytics (Kafka, consumers, stats) | ⬜ | — |
 | M1-E rate limiting (Lua token bucket, filter) | ⬜ | — |
@@ -26,10 +26,37 @@
 | M4 load + packaging (JMeter, README, demo, defense notes) | ⬜ | — |
 
 ## NEXT
-Execute M1 tracks A–E (parallelizable; task board has them as tasks #6,#2,#5,#3,#4).
-Track order if sequential: A → B → E → C → D.
+Execute M1-B (data track, territory `sharding/`): consistent-hash ring
+(murmur3_32_fixed, 150 vnodes, key = short code), routing datasource, per-shard
+programmatic Flyway consuming `db/migration/shard/V1__create_links.sql`
+(already written by Track A), replica-preferring reads with single primary
+fallback. Must pass `ShardRouterContractTest`; the real router is `@Primary`
+over the SingleShardRouter stub. Remaining track order: B → E → C → D.
 Each track: implement in its owned territory (see docs/OWNERSHIP.md), pass its
 contract tests, `mvn verify` green, commit `checkpoint/m1-<track>`.
+
+### Notes from M1-A for later tracks
+- Shard schema frozen in `src/main/resources/db/migration/shard/V1__create_links.sql`:
+  `links` (id BIGINT PK snowflake, short_code VARCHAR(32) + unique index
+  ux_links_short_code, long_url VARCHAR(8192), user_id BIGINT nullable,
+  created_at/expires_at TIMESTAMPTZ, is_custom_alias BOOLEAN) and
+  `idempotency_keys` (key VARCHAR(128) PK, short_code, created_at). Cleanup of
+  idempotency rows older than 24h is a documented TODO, not built.
+- Idempotency rows are routed by the idempotency-key STRING (not a short code)
+  — ShardRouter implementations must accept arbitrary string keys.
+- `RedisUrlCache` (cache/) is `@Primary` over the NoopCache stub. Keys
+  `url:{code}` and `lock:url:{code}` per ADR-004. Metrics
+  cache.hits/misses/negative.hits/errors, all tagged source=redis. Unlock has
+  no fencing token (documented javadoc limitation).
+- `common/GlobalExceptionHandler` maps ValidationException→400,
+  NotFoundException→404, AliasConflictException→409, InfraUnavailableException
+  and DataAccessException→503; body always `{"error": "..."}`. Reuse it.
+- Local JDK 25 quirks: Lombok annotation processing fails (write plain
+  constructors, don't use @RequiredArgsConstructor); Mockito needs the subclass
+  mock maker (`src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker`)
+  → final classes cannot be mocked in tests.
+- Controller slices use `@WebMvcTest` + `@AutoConfigureMockMvc(addFilters=false)`
+  until Track C lands real security config.
 
 ## Decisions already frozen (do not re-derive — see docs/adr/)
 Snowflake 41/10/12 epoch 2024-01-01 · Base62 · 302 not 301 · murmur3_32_fixed +
