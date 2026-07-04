@@ -32,57 +32,25 @@ commits (re-tagging the checkpoints afterwards).
 | M1-B data (hash ring, shard routing, replicas) | ✅ DONE | `checkpoint/m1-b` |
 | M1-E rate limiting (Lua token bucket, filter) | ✅ DONE | `checkpoint/m1-e` |
 | M1-C auth (JWT, users, ownership CRUD) | ✅ DONE | `checkpoint/m1-c` |
-| M1-D analytics (Kafka, consumers, stats) | ⬜ next | — |
-| M2 integration (swap stubs, filter order, e2e) | ⬜ | — |
+| M1-D analytics (Kafka, consumers, stats) | ✅ DONE | `checkpoint/m1-d` |
+| M2 integration (swap stubs, filter order, e2e) | ⬜ next | — |
 | M3-F resilience (breakers, chaos, degradation matrix) | ⬜ | — |
 | M3-G observability (metrics, dashboards, logs) | ⬜ | — |
 | M4 load + packaging (JMeter, README, demo, defense notes) | ⬜ | — |
 
 ## NEXT
-Execute M1-D (analytics track, territory `analytics/` + `events/`). Frozen
-scope (ADR-006/007/008):
-- **KafkaEventPublisher** implements EventPublisher, `@Primary` +
-  `@ConditionalOnProperty` (flag `app.kafka.enabled`, default false locally —
-  same supersede pattern as B/E) over the NoopPublisher stub. Producer config:
-  acks=all, max.block.ms=0 (NEVER block the redirect path), partition key =
-  shortCode. publishClick/publishLinkEvent are fire-and-forget: send() with a
-  callback that only counts failures (`events.publish.total{outcome=ok|error}`
-  — allowed labels only). Topics: `click-events`, `link-events` (declare via
-  KafkaAdmin NewTopic beans, partitions 6, replication 1 for compose).
-- **Click consumer** (`@KafkaListener`, topic click-events, groupId
-  analytics): per ADR-007 exactly-once-effect — raw INSERT of eventId into
-  `raw_click_events` (PK eventId); on duplicate key → skip increment;
-  else increment `link_stats` (short_code PK, click_count, last_click_at,
-  last_referrer). Both tables live in the CONTROL DB (off the shard hot
-  path; V2__create_analytics.sql in db/migration/control — append-only,
-  Track D owns V2). Batch or record-at-a-time — record is fine for M1.
-- **Link-events consumer** (topic link-events, groupId link-index): feeds
-  `user_links` via M1-C's `LinkIndexRepository` (CREATED → insert row
-  (shortCode PK, userId), DELETED → delete row, UPDATED → no-op for the
-  index) and evicts the URL cache (`UrlCache.evict(shortCode)`) on UPDATED
-  and DELETED. Dedup on eventId with the same raw-insert gate
-  (`raw_link_events` table, also V2).
-- **Stats endpoint**: `GET /api/links/{code}/stats` → owner-only (same
-  `LinkIndexRepository` ownership check as M1-C, 404 on non-owner):
-  `{shortCode, clickCount, lastClickAt}`. Lives in analytics/.
-- **Testing** (Docker-free): publisher unit tests with mocked KafkaTemplate
-  (fire-and-forget: send failure never throws, metrics counted); consumer
-  unit tests with mocked repos (dup eventId → no double increment; CREATED
-  inserts index row; UPDATED/DELETED evict cache); stats controller slice
-  (owner 200 / non-owner 404). Real-Kafka ITs behind `@Tag("docker")`
-  (spring-kafka-test EmbeddedKafka is allowed too — it's in the pom and
-  needs no Docker; prefer it for one happy-path consumer IT if quick).
-- application.yml: `app.kafka.enabled: ${KAFKA_ENABLED:false}` +
-  `spring.kafka.bootstrap-servers: ${KAFKA_BOOTSTRAP:kafka:9092}` (compose
-  sets KAFKA_ENABLED=true).
+Execute M2 integration.
+Goal: prove all real implementations work TOGETHER (until now each track was tested in isolation against stubs).
+- Bean-resolution sanity: a full-context `@SpringBootTest` (H2 control DB, sharding off, ratelimit on with mocked-or-embedded Redis, kafka off) that boots and asserts the @Primary winners.
+- Filter-chain order test: with security active, assert rate-limit runs before JWT.
+- End-to-end happy path IT: register → login → create link → redirect → stats reflects the click.
+- Fix any cross-track integration bugs you find.
 
-Each track: implement in its owned territory (see docs/OWNERSHIP.md), pass
-its contract tests, `mvn verify` green, commit `checkpoint/m1-<track>`.
-After D: **M2 integration** (compose e2e in CI, filter-order verification,
-swap-stub sanity, sharded end-to-end). Also queued by user request:
-**Spring Boot 4 / Framework 7 upgrade** as its own milestone AFTER M2 (big
-bang: jjwt/springdoc/resilience4j compat, test-slice API changes) — do NOT
-mix it into a feature track.
+### Notes from M1-D for later tracks
+- Analytics tables (`raw_click_events`, `link_stats`, `raw_link_events`) created in `V2__create_analytics.sql` (Control DB).
+- `KafkaEventPublisher` operates conditionally on `app.kafka.enabled` and publishes to `click-events` and `link-events`.
+- `ClickConsumer` and `LinkEventConsumer` use raw insert queries with `ON CONFLICT DO NOTHING` for exactly-once execution.
+- `StatsController` exposes `GET /api/links/{code}/stats` with proper ownership validation.
 
 ### Notes from M1-C for later tracks
 - Control DB beans (`auth/ControlDbConfig`, active when `app.control-db.jdbc-url`
