@@ -39,6 +39,22 @@ app:
   base-url: ${APP_BASE_URL:http://localhost:8080}
   snowflake:
     epoch: 2024-01-01T00:00:00Z
+  # Track C (ADR-010): control DB is off the ring. Compose sets a Postgres
+  # URL; host-side runs point to localhost or an H2 mem URL.
+  control-db:
+    jdbc-url: ${CONTROL_DB_URL:jdbc:postgresql://control-db:5432/control}
+    username: ${CONTROL_DB_USER:control}
+    password: ${CONTROL_DB_PASSWORD:control}
+    pool-size: ${CONTROL_DB_POOL_SIZE:10}
+  # Track C (ADR-009): JWT settings. Secret from env — leave the default
+  # empty so context startup fails only when someone actually needs auth
+  # (SecurityConfig is @ConditionalOnProperty("app.jwt.secret") — an unset
+  # secret disables the whole auth stack, useful for load-test profiles).
+  jwt:
+    secret: ${JWT_SECRET:#{null}}
+    access-ttl: PT15M
+    refresh-ttl: P7D
+    issuer: url-shortener
   # Track B (ADR-002): consistent-hash sharding. Disabled locally (the
   # SingleShardRouter stub serves); compose/CI enable via SHARDING_ENABLED=true.
   # JDBC defaults use the compose network hostnames; host-side runs override

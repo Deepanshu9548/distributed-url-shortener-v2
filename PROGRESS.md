@@ -31,68 +31,103 @@ commits (re-tagging the checkpoints afterwards).
 | M1-A core (Snowflake, Base62, shorten/redirect, cache-aside) | ✅ DONE | `checkpoint/m1-a` |
 | M1-B data (hash ring, shard routing, replicas) | ✅ DONE | `checkpoint/m1-b` |
 | M1-E rate limiting (Lua token bucket, filter) | ✅ DONE | `checkpoint/m1-e` |
-| M1-C auth (JWT, users, ownership CRUD) | ⬜ next | — |
-| M1-D analytics (Kafka, consumers, stats) | ⬜ | — |
+| M1-C auth (JWT, users, ownership CRUD) | ✅ DONE | `checkpoint/m1-c` |
+| M1-D analytics (Kafka, consumers, stats) | ⬜ next | — |
 | M2 integration (swap stubs, filter order, e2e) | ⬜ | — |
 | M3-F resilience (breakers, chaos, degradation matrix) | ⬜ | — |
 | M3-G observability (metrics, dashboards, logs) | ⬜ | — |
 | M4 load + packaging (JMeter, README, demo, defense notes) | ⬜ | — |
 
+
 ## NEXT
-Execute M1-C (auth track, territory `auth/`). Frozen scope:
-- **Control DB (ADR-010)**: OWN qualified DataSource + EntityManagerFactory +
-  TransactionManager (do NOT share the shard `routingDataSource`, which is
-  `@Primary` when sharding is on). Flyway location
-  `classpath:db/migration/control` (new). Config keys under `app.control-db`
-  (env-driven; independent of `SHARD*_URL`).
-- **Schema (control DB)**: `users` (id BIGINT PK snowflake OR bigserial —
-  pick snowflake to reuse the generator + stay off DB sequences; email
-  citext unique, password_hash bcrypt, created_at); `user_links` (user_id,
-  short_code PK+FK-ish, created_at) — this is the LinkIndex fed by
-  Track D's link-events consumer; C DEFINES the table + a read-only
-  `LinkIndexRepository` and hands it to Track D.
-- **JWT**: access 15m HS256 (secret from `JWT_SECRET`, already in
-  `.env.example`), refresh 7d rotation (persist refresh-family/session id
-  in Redis or control DB — choose Redis with fail-OPEN denylist per
-  frozen decisions; access token bears user id + roles).
-- **Endpoints under `/api/auth/**`** (rate-limited by M1-E as `auth`):
-  `POST /register` (email+password → 201 minimal profile),
-  `POST /login` (→ access+refresh),
-  `POST /refresh` (rotate),
-  `POST /logout` (denylist the refresh family + current access token JTI).
-- **Spring Security config**: public paths = `GET /{code}` (regex-guarded
-  as in the redirect controller), `POST /api/auth/**`, `/actuator/health`,
-  `/actuator/prometheus`, `/actuator/info`, `/swagger-ui/**`, `/v3/api-docs/**`;
-  everything else under `/api/**` → JWT-authenticated. Filter order (with
-  M1-E in mind, per its "Notes"): `InstanceHeaderFilter` (HIGHEST) →
-  request-id (M3-G will add) → `RateLimitFilter` → JWT auth →
-  authorization. `RateLimitFilter` must run BEFORE JWT auth so that
-  `POST /api/auth/login` gets IP-bucketed (no principal yet) and other
-  authenticated writes get user-bucketed (M1-E already reads
-  SecurityContextHolder → wire the filters in that order).
-- **Ownership CRUD** on `/api/links` for the caller's own links:
-  `GET /api/links` (paged list of the caller's short codes via `user_links`),
-  `GET /api/links/{code}` (already public metadata read from M1-A — decide:
-  keep public per README, or gate; frozen answer = keep public, but a new
-  `GET /api/me/links` gives the paged user list),
-  `PUT /api/links/{code}` (owner-only: update long_url/expires_at),
-  `DELETE /api/links/{code}` (owner-only: soft-delete? frozen = hard delete
-  + LinkEvent.DELETED). Ownership check reads `user_links` in the control DB
-  (fast, off the shard hot path).
-- **Supersede pattern**: no stub to supersede for auth (Spring Security is
-  the "stub" via default in-memory user + password log line — replace with
-  our JwtAuthenticationFilter + UserDetailsService).
-- **Testing**: unit tests for JwtService (sign/verify, exp, refresh
-  rotation), UserService (bcrypt, register/login idempotency), controller
-  slices for /api/auth/** endpoints, security config (public vs protected
-  routes), ownership guard. All Docker-free — no Postgres needed in unit
-  tests (repositories mocked). Control-DB migration ITs behind `@Tag("docker")`.
+Execute M1-D (analytics track, territory `analytics/` + `events/`). Frozen
+scope (ADR-006/007/008):
+- **KafkaEventPublisher** implements EventPublisher, `@Primary` +
+  `@ConditionalOnProperty` (flag `app.kafka.enabled`, default false locally —
+  same supersede pattern as B/E) over the NoopPublisher stub. Producer config:
+  acks=all, max.block.ms=0 (NEVER block the redirect path), partition key =
+  shortCode. publishClick/publishLinkEvent are fire-and-forget: send() with a
+  callback that only counts failures (`events.publish.total{outcome=ok|error}`
+  — allowed labels only). Topics: `click-events`, `link-events` (declare via
+  KafkaAdmin NewTopic beans, partitions 6, replication 1 for compose).
+- **Click consumer** (`@KafkaListener`, topic click-events, groupId
+  analytics): per ADR-007 exactly-once-effect — raw INSERT of eventId into
+  `raw_click_events` (PK eventId); on duplicate key → skip increment;
+  else increment `link_stats` (short_code PK, click_count, last_click_at,
+  last_referrer). Both tables live in the CONTROL DB (off the shard hot
+  path; V2__create_analytics.sql in db/migration/control — append-only,
+  Track D owns V2). Batch or record-at-a-time — record is fine for M1.
+- **Link-events consumer** (topic link-events, groupId link-index): feeds
+  `user_links` via M1-C's `LinkIndexRepository` (CREATED → insert row
+  (shortCode PK, userId), DELETED → delete row, UPDATED → no-op for the
+  index) and evicts the URL cache (`UrlCache.evict(shortCode)`) on UPDATED
+  and DELETED. Dedup on eventId with the same raw-insert gate
+  (`raw_link_events` table, also V2).
+- **Stats endpoint**: `GET /api/links/{code}/stats` → owner-only (same
+  `LinkIndexRepository` ownership check as M1-C, 404 on non-owner):
+  `{shortCode, clickCount, lastClickAt}`. Lives in analytics/.
+- **Testing** (Docker-free): publisher unit tests with mocked KafkaTemplate
+  (fire-and-forget: send failure never throws, metrics counted); consumer
+  unit tests with mocked repos (dup eventId → no double increment; CREATED
+  inserts index row; UPDATED/DELETED evict cache); stats controller slice
+  (owner 200 / non-owner 404). Real-Kafka ITs behind `@Tag("docker")`
+  (spring-kafka-test EmbeddedKafka is allowed too — it's in the pom and
+  needs no Docker; prefer it for one happy-path consumer IT if quick).
+- application.yml: `app.kafka.enabled: ${KAFKA_ENABLED:false}` +
+  `spring.kafka.bootstrap-servers: ${KAFKA_BOOTSTRAP:kafka:9092}` (compose
+  sets KAFKA_ENABLED=true).
 
 Each track: implement in its owned territory (see docs/OWNERSHIP.md), pass
 its contract tests, `mvn verify` green, commit `checkpoint/m1-<track>`.
-After C: **M1-D** (analytics: Kafka publisher supersedes NoopPublisher,
-click + link-events consumers, `link-events` feeds `user_links`; ADR-006/
-007/008 frozen).
+After D: **M2 integration** (compose e2e in CI, filter-order verification,
+swap-stub sanity, sharded end-to-end). Also queued by user request:
+**Spring Boot 4 / Framework 7 upgrade** as its own milestone AFTER M2 (big
+bang: jjwt/springdoc/resilience4j compat, test-slice API changes) — do NOT
+mix it into a feature track.
+
+### Notes from M1-C for later tracks
+- Control DB beans (`auth/ControlDbConfig`, active when `app.control-db.jdbc-url`
+  set): `controlDataSource` (Hikari, 1s conn timeout), `controlFlyway`
+  (programmatic, `classpath:db/migration/control`), `controlEntityManagerFactory`
+  (persistence unit "control", scans auth package only),
+  `controlTransactionManager`. Auth repos bind via `@EnableJpaRepositories`
+  on ControlDbConfig. Shard-side JPA scoping moved to root `ShardJpaConfig`
+  (@EntityScan/@EnableJpaRepositories for shortener/ ONLY — keep the app
+  class annotation-light; @WebMvcTest slices use it as context root!).
+- JWT config keys: `app.jwt.secret` (env JWT_SECRET, min 32 bytes — the
+  WHOLE auth stack is `@ConditionalOnProperty(app.jwt.secret)` so contexts
+  without the secret skip auth cleanly), access-ttl PT15M, refresh-ttl P7D,
+  issuer url-shortener. Beans: JwtService, DenylistService,
+  JwtAuthenticationFilter, SecurityConfig, RestAuthEntryPoint/DeniedHandler.
+- Refresh sessions: Redis `auth:refresh:{sid}` (TTL=refresh remaining),
+  rotation deletes old sid. Denylist `auth:denylist:{jti}` fail-OPEN read
+  (metric `auth.denylist.checks{outcome}`), writes propagate 503.
+- Filter ordering solution: RateLimitFilter + JwtAuthenticationFilter
+  servlet auto-registration DISABLED via FilterRegistrationConfig; both are
+  wired INSIDE the security chain (SecurityConfig: rateLimit before jwt,
+  jwt before UsernamePasswordAuthenticationFilter). ObjectProvider guards
+  the ratelimit.enabled=false case.
+- Controllers get the caller via `AuthenticatedUser` argument (request attr
+  `auth.currentUser` set by the JWT filter, resolved by
+  AuthenticatedUserResolver — registered in WebMvcConfig, which must stay
+  dependency-free: @WebMvcTest loads every WebMvcConfigurer).
+- Ownership flow: `LinkIndexRepository.findByShortCodeAndUserId` → miss =
+  404 (leak-resistant). PUT mutates long_url/expires_at via Link setters
+  (added to shortener/Link.java — integration-approved cross-territory
+  change) under `shardRouter.executeWrite`. PUT → LinkEvent.UPDATED,
+  DELETE → LinkEvent.DELETED (Track D consumes; also evict cache there).
+- `user_links` (control DB V1): short_code PK, user_id, created_at + index
+  (user_id, created_at DESC). Track D INSERTs on CREATED — use
+  `new UserLink(shortCode, userId, createdAt)` + LinkIndexRepository.save.
+- TEST HYGIENE (learned the hard way): servlet `Filter` @Components and
+  `WebMvcConfigurer`s ARE auto-included by @WebMvcTest slices. Test-default
+  application.yml therefore has `ratelimit.enabled: false` and NO
+  `app.jwt.secret`; tests that need those set properties explicitly.
+- Public vs protected: public = GET /{code} (regex), POST /api/auth/
+  register|login|refresh, GET /api/links/{code}, actuator health/info/
+  prometheus, swagger. Everything else under /api/** authenticated
+  (including /api/links/{code}/stats — Track D note: it's under /api/**,
+  so already protected; add the ownership check in the controller).
 
 ### Notes from M1-A for later tracks
 - Shard schema frozen in `src/main/resources/db/migration/shard/V1__create_links.sql`:

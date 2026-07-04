@@ -1,5 +1,8 @@
 package io.portfolio.urlshortener.common;
 
+import io.portfolio.urlshortener.auth.EmailAlreadyExistsException;
+import io.portfolio.urlshortener.auth.InvalidCredentialsException;
+import io.portfolio.urlshortener.auth.InvalidTokenException;
 import io.portfolio.urlshortener.shortener.AliasConflictException;
 import io.portfolio.urlshortener.shortener.InfraUnavailableException;
 import io.portfolio.urlshortener.shortener.NotFoundException;
@@ -44,6 +47,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AliasConflictException.class)
     public ResponseEntity<Map<String, String>> conflict(AliasConflictException e) {
         return body(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<Map<String, String>> emailTaken(EmailAlreadyExistsException e) {
+        return body(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    @ExceptionHandler({InvalidCredentialsException.class, InvalidTokenException.class})
+    public ResponseEntity<Map<String, String>> unauthorized(RuntimeException e) {
+        return body(HttpStatus.UNAUTHORIZED, e.getMessage());
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)

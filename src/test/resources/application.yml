@@ -1,0 +1,16 @@
+# Test defaults. The JWT secret is deliberately ABSENT here: setting it would
+# activate JwtAuthenticationFilter (a servlet Filter, auto-included by
+# @WebMvcTest slices) whose collaborators the slices don't create. Auth tests
+# opt in with @TestPropertySource / constructor-built services instead.
+# Rate limiting off in tests for the same slice reason (RateLimitFilter is a
+# servlet Filter needing a RateLimiter bean the slices don't create). Its own
+# tests are context-free; the full chain is integration-tested in M2.
+ratelimit:
+  enabled: false
+
+app:
+  control-db:
+    jdbc-url: jdbc:h2:mem:controldb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+    pool-size: 4
