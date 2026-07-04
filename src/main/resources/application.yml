@@ -11,6 +11,12 @@ spring:
       ddl-auto: validate
     properties:
       jakarta.persistence.query.timeout: 1000
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:kafka:9092}
+    producer:
+      acks: all
+      properties:
+        max.block.ms: 0
 
 server:
   port: 8080
@@ -35,6 +41,8 @@ management:
         http.server.requests: 10ms,25ms,50ms,100ms,200ms,500ms,1s
 
 app:
+  kafka:
+    enabled: ${KAFKA_ENABLED:false}
   node-id: ${NODE_ID:1}
   base-url: ${APP_BASE_URL:http://localhost:8080}
   snowflake:
