@@ -12,6 +12,7 @@ target/
 load-tests/results/
 
 .claude/settings.local.json
+.claude
+.gemini/*
+!.gemini/context.md
 
-# local credentials — never commit (still needs `git rm --cached .claude/settings.json`)
-.claude/settings.json
