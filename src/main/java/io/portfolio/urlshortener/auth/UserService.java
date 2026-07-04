@@ -21,6 +21,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final Clock clock;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public UserService(UserRepository users, SnowflakeIdGenerator idGen, PasswordEncoder passwordEncoder) {
         this(users, idGen, passwordEncoder, Clock.systemUTC());
     }

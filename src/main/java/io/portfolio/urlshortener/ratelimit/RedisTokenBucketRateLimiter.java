@@ -53,6 +53,7 @@ public class RedisTokenBucketRateLimiter implements RateLimiter {
     private final RedisScript<List> script;
     private final Clock clock;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public RedisTokenBucketRateLimiter(StringRedisTemplate redis,
                                       RateLimitProperties properties,
                                       MeterRegistry meterRegistry) {

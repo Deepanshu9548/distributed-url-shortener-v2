@@ -36,7 +36,7 @@ import java.util.Map;
 @Configuration
 @ConditionalOnProperty(name = "app.control-db.jdbc-url")
 @EnableJpaRepositories(
-        basePackages = "io.portfolio.urlshortener.auth",
+        basePackages = {"io.portfolio.urlshortener.auth", "io.portfolio.urlshortener.analytics"},
         entityManagerFactoryRef = "controlEntityManagerFactory",
         transactionManagerRef = "controlTransactionManager")
 public class ControlDbConfig {
@@ -60,7 +60,7 @@ public class ControlDbConfig {
     }
 
     @Bean
-    public Flyway controlFlyway(DataSource controlDataSource) {
+    public Flyway controlFlyway(@org.springframework.beans.factory.annotation.Qualifier("controlDataSource") DataSource controlDataSource) {
         Flyway flyway = Flyway.configure()
                 .dataSource(controlDataSource)
                 .locations(MIGRATION_LOCATION)
@@ -72,11 +72,11 @@ public class ControlDbConfig {
 
     @Bean
     public LocalContainerEntityManagerFactoryBean controlEntityManagerFactory(
-            DataSource controlDataSource, Flyway controlFlyway) {
+            @org.springframework.beans.factory.annotation.Qualifier("controlDataSource") DataSource controlDataSource, @org.springframework.beans.factory.annotation.Qualifier("controlFlyway") Flyway controlFlyway) {
         // Depend on Flyway so migrations run before validate() sees the schema.
         LocalContainerEntityManagerFactoryBean emf = new LocalContainerEntityManagerFactoryBean();
         emf.setDataSource(controlDataSource);
-        emf.setPackagesToScan("io.portfolio.urlshortener.auth");
+        emf.setPackagesToScan("io.portfolio.urlshortener.auth", "io.portfolio.urlshortener.analytics");
         emf.setPersistenceUnitName("control");
 
         HibernateJpaVendorAdapter adapter = new HibernateJpaVendorAdapter();
@@ -91,7 +91,7 @@ public class ControlDbConfig {
     }
 
     @Bean
-    public PlatformTransactionManager controlTransactionManager(EntityManagerFactory controlEntityManagerFactory) {
+    public PlatformTransactionManager controlTransactionManager(@org.springframework.beans.factory.annotation.Qualifier("controlEntityManagerFactory") EntityManagerFactory controlEntityManagerFactory) {
         return new JpaTransactionManager(controlEntityManagerFactory);
     }
 }

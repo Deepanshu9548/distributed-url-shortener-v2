@@ -37,6 +37,7 @@ public class SnowflakeIdGenerator {
     private long lastTimestamp = -1L;
     private long sequence = 0L;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public SnowflakeIdGenerator(@Value("${app.node-id}") long nodeId) {
         this(nodeId, System::currentTimeMillis);
     }

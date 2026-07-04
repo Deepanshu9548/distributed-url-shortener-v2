@@ -35,6 +35,7 @@ public class RefreshTokenService {
     private final StringRedisTemplate redis;
     private final Clock clock;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public RefreshTokenService(StringRedisTemplate redis) {
         this(redis, Clock.systemUTC());
     }
