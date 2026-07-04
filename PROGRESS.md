@@ -33,18 +33,20 @@ commits (re-tagging the checkpoints afterwards).
 | M1-E rate limiting (Lua token bucket, filter) | ✅ DONE | `checkpoint/m1-e` |
 | M1-C auth (JWT, users, ownership CRUD) | ✅ DONE | `checkpoint/m1-c` |
 | M1-D analytics (Kafka, consumers, stats) | ✅ DONE | `checkpoint/m1-d` |
-| M2 integration (swap stubs, filter order, e2e) | ⬜ next | — |
-| M3-F resilience (breakers, chaos, degradation matrix) | ⬜ | — |
+| M2 integration (swap stubs, filter order, e2e) | ✅ DONE | `checkpoint/m2` |
+| M3-F resilience (breakers, chaos, degradation matrix) | ⬜ next | — |
 | M3-G observability (metrics, dashboards, logs) | ⬜ | — |
 | M4 load + packaging (JMeter, README, demo, defense notes) | ⬜ | — |
 
 ## NEXT
-Execute M2 integration.
-Goal: prove all real implementations work TOGETHER (until now each track was tested in isolation against stubs).
-- Bean-resolution sanity: a full-context `@SpringBootTest` (H2 control DB, sharding off, ratelimit on with mocked-or-embedded Redis, kafka off) that boots and asserts the @Primary winners.
-- Filter-chain order test: with security active, assert rate-limit runs before JWT.
-- End-to-end happy path IT: register → login → create link → redirect → stats reflects the click.
-- Fix any cross-track integration bugs you find.
+Execute M3-F resilience.
+Goal: Resilience4j breakers on DB/Redis/Kafka calls, chaos tests, degradation matrix doc using the frozen decisions list.
+
+### Notes from M2 for later tracks
+- `ShardJpaConfig` has explicitly declared `@Primary` on its `EntityManagerFactory` and `TransactionManager` to avoid ambiguity with `ControlDbConfig`'s beans when both are loaded in context.
+- EndToEnd test (`EndToEndIT`) verifies happy-path utilizing Testcontainers. Runs via `-Pdocker-tests`.
+- The rate-limit filter is proven to execute *before* the JWT filter, ensuring that unauthenticated brute-force requests exhaust IP rate buckets before causing database load or hitting authentication logic.
+
 
 ### Notes from M1-D for later tracks
 - Analytics tables (`raw_click_events`, `link_stats`, `raw_link_events`) created in `V2__create_analytics.sql` (Control DB).
