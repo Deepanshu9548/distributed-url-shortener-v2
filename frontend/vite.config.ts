@@ -21,6 +21,12 @@ export default defineConfig({
       '^/[0-9a-zA-Z_-]{1,32}$': {
         target: 'http://localhost:8080',
         changeOrigin: true,
+        bypass: (req) => {
+          const reservedPaths = ['/login', '/register', '/dashboard', '/links', '/src', '/node_modules', '/@'];
+          if (req.url && reservedPaths.some(p => req.url.startsWith(p) || req.url === '/')) {
+            return req.url; // Bypass proxy, let Vite handle it
+          }
+        }
       }
     }
   }
