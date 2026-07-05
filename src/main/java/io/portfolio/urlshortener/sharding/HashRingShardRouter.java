@@ -1,5 +1,8 @@
 package io.portfolio.urlshortener.sharding;
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.portfolio.urlshortener.contracts.ShardRouter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,15 +51,17 @@ public class HashRingShardRouter implements ShardRouter {
 
     private final ConsistentHashRing ring;
     private final MeterRegistry meterRegistry;
+    private final CircuitBreakerRegistry circuitBreakerRegistry;
 
     @Autowired
-    public HashRingShardRouter(ShardProperties properties, MeterRegistry meterRegistry) {
-        this(new ConsistentHashRing(properties.shardNames(), properties.vnodes()), meterRegistry);
+    public HashRingShardRouter(ShardProperties properties, MeterRegistry meterRegistry, CircuitBreakerRegistry circuitBreakerRegistry) {
+        this(new ConsistentHashRing(properties.shardNames(), properties.vnodes()), meterRegistry, circuitBreakerRegistry);
     }
 
-    HashRingShardRouter(ConsistentHashRing ring, MeterRegistry meterRegistry) {
+    HashRingShardRouter(ConsistentHashRing ring, MeterRegistry meterRegistry, CircuitBreakerRegistry circuitBreakerRegistry) {
         this.ring = ring;
         this.meterRegistry = meterRegistry;
+        this.circuitBreakerRegistry = circuitBreakerRegistry;
     }
 
     @Override
@@ -64,9 +69,13 @@ public class HashRingShardRouter implements ShardRouter {
         String shard = ring.shardFor(key);
         ShardContext.set(shard, ShardContext.Mode.PRIMARY);
         try {
-            T result = operation.get();
+            CircuitBreaker breaker = circuitBreakerRegistry.circuitBreaker("shard-" + shard);
+            T result = breaker.executeSupplier(operation);
             count(shard, "primary");
             return result;
+        } catch (CallNotPermittedException e) {
+            countFallback(shard);
+            throw new ShardUnavailableException(shard, e);
         } finally {
             ShardContext.clear();
         }
@@ -75,22 +84,29 @@ public class HashRingShardRouter implements ShardRouter {
     @Override
     public <T> T executeRead(String key, Supplier<T> operation) {
         String shard = ring.shardFor(key);
+        CircuitBreaker breaker = circuitBreakerRegistry.circuitBreaker("shard-" + shard);
         try {
             ShardContext.set(shard, ShardContext.Mode.REPLICA);
             try {
-                T result = operation.get();
+                T result = breaker.executeSupplier(operation);
                 count(shard, "replica");
                 return result;
             } catch (RuntimeException e) {
+                if (e instanceof CallNotPermittedException) {
+                    throw e; // Fail fast without falling back to primary on the same broken shard
+                }
                 if (!isConnectionFailure(e)) {
                     throw e; // business exception — no fallback, propagate untouched
                 }
             }
             // replica unreachable → exactly one retry against the primary
             ShardContext.set(shard, ShardContext.Mode.PRIMARY);
-            T result = operation.get();
+            T result = breaker.executeSupplier(operation);
             count(shard, "replica_fallback");
             return result;
+        } catch (CallNotPermittedException e) {
+            countFallback(shard);
+            throw new ShardUnavailableException(shard, e);
         } finally {
             ShardContext.clear();
         }
@@ -108,5 +124,9 @@ public class HashRingShardRouter implements ShardRouter {
 
     private void count(String shard, String outcome) {
         meterRegistry.counter(ROUTE_METRIC, "shard", shard, "outcome", outcome).increment();
+    }
+
+    private void countFallback(String shard) {
+        meterRegistry.counter("resilience.fallback.total", "breaker", "shard-" + shard, "outcome", "fallback").increment();
     }
 }

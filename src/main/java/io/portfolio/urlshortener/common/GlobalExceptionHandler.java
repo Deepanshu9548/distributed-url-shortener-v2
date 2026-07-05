@@ -65,7 +65,7 @@ public class GlobalExceptionHandler {
     }
 
     /** 503, never 404: "we don't know" must not look like "it doesn't exist". */
-    @ExceptionHandler({InfraUnavailableException.class, DataAccessException.class})
+    @ExceptionHandler({InfraUnavailableException.class, DataAccessException.class, io.portfolio.urlshortener.sharding.ShardUnavailableException.class})
     public ResponseEntity<Map<String, String>> unavailable(Exception e) {
         log.warn("infrastructure unavailable: {}", e.getMessage());
         return body(HttpStatus.SERVICE_UNAVAILABLE, "service temporarily unavailable");

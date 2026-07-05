@@ -100,3 +100,24 @@ ratelimit:
     write:    { capacity: 10,  refill-per-minute: 10,  fail-open: false }
     redirect: { capacity: 100, refill-per-minute: 100, fail-open: true }
     auth:     { capacity: 5,   refill-per-minute: 5,   fail-open: false }
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowSize: 20
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5s
+        permittedNumberOfCallsInHalfOpenState: 3
+    instances:
+      redis-cache:
+        baseConfig: default
+      redis-ratelimit:
+        baseConfig: default
+      kafka-publisher:
+        baseConfig: default
+        waitDurationInOpenState: 10s
+      shard-shard1:
+        baseConfig: default
+      shard-shard2:
+        baseConfig: default

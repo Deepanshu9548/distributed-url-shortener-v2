@@ -46,7 +46,7 @@ class RedisUrlCacheTest {
     void setUp() {
         lenient().when(redis.opsForValue()).thenReturn(valueOps);
         meters = new SimpleMeterRegistry();
-        cache = new RedisUrlCache(redis, meters);
+        cache = new RedisUrlCache(redis, io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry.ofDefaults(), meters);
     }
 
     private double counter(String name) {

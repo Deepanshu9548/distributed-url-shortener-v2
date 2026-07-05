@@ -29,7 +29,7 @@ class HashRingShardRouterTest {
 
     private final SimpleMeterRegistry registry = new SimpleMeterRegistry();
     private final HashRingShardRouter router = new HashRingShardRouter(
-            new ConsistentHashRing(List.of("shard1"), 150), registry);
+            new ConsistentHashRing(List.of("shard1"), 150), registry, io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry.ofDefaults());
 
     @Test
     void readFallsBackToPrimaryExactlyOnceWhenReplicaConnectionFails() {

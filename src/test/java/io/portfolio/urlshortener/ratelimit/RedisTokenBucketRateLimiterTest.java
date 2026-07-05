@@ -33,7 +33,7 @@ class RedisTokenBucketRateLimiterTest {
 
     private RedisTokenBucketRateLimiter limiter(Map<String, LimiterConfig> map) {
         RateLimitProperties props = new RateLimitProperties(true, map);
-        return new RedisTokenBucketRateLimiter(redis, props, meters, script, clock);
+        return new RedisTokenBucketRateLimiter(redis, props, meters, io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry.ofDefaults(), script, clock);
     }
 
     @BeforeEach

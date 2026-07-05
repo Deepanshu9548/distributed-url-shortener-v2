@@ -33,7 +33,7 @@ class RedisUrlCacheIT extends UrlCacheContractTest {
     static void connect() {
         connectionFactory = new LettuceConnectionFactory(REDIS.getHost(), REDIS.getMappedPort(6379));
         connectionFactory.afterPropertiesSet();
-        cache = new RedisUrlCache(new StringRedisTemplate(connectionFactory), new SimpleMeterRegistry());
+        cache = new RedisUrlCache(new StringRedisTemplate(connectionFactory), io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry.ofDefaults(), new SimpleMeterRegistry());
     }
 
     @AfterAll

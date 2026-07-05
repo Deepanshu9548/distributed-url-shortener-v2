@@ -1,5 +1,8 @@
 package io.portfolio.urlshortener.cache;
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.portfolio.urlshortener.contracts.UrlCache;
@@ -39,17 +42,22 @@ public class RedisUrlCache implements UrlCache {
     static final Duration LOCK_TTL = Duration.ofMillis(2000);
     static final String KEY_PREFIX = "url:";
     static final String LOCK_PREFIX = "lock:url:";
+    static final String BREAKER_NAME = "redis-cache";
 
     private static final Logger log = LoggerFactory.getLogger(RedisUrlCache.class);
 
     private final StringRedisTemplate redis;
+    private final CircuitBreaker circuitBreaker;
+    private final MeterRegistry meterRegistry;
     private final Counter hits;
     private final Counter misses;
     private final Counter negativeHits;
     private final Counter errors;
 
-    public RedisUrlCache(StringRedisTemplate redis, MeterRegistry meterRegistry) {
+    public RedisUrlCache(StringRedisTemplate redis, CircuitBreakerRegistry circuitBreakerRegistry, MeterRegistry meterRegistry) {
         this.redis = redis;
+        this.circuitBreaker = circuitBreakerRegistry.circuitBreaker(BREAKER_NAME);
+        this.meterRegistry = meterRegistry;
         // Metric names per CONVENTIONS.md: lowercase dot-separated, no short-code labels.
         this.hits = Counter.builder("cache.hits").tag("source", "redis").register(meterRegistry);
         this.misses = Counter.builder("cache.misses").tag("source", "redis").register(meterRegistry);
@@ -60,7 +68,7 @@ public class RedisUrlCache implements UrlCache {
     @Override
     public CacheResult get(String shortCode) {
         try {
-            String value = redis.opsForValue().get(KEY_PREFIX + shortCode);
+            String value = circuitBreaker.executeSupplier(() -> redis.opsForValue().get(KEY_PREFIX + shortCode));
             if (value == null) {
                 misses.increment();
                 return new Miss();
@@ -71,7 +79,11 @@ public class RedisUrlCache implements UrlCache {
             }
             hits.increment();
             return new Hit(value);
+        } catch (CallNotPermittedException e) {
+            countFallback();
+            return new Miss();
         } catch (RuntimeException e) {
+            countFallback();
             swallow("get", e);
             return new Miss();
         }
@@ -80,8 +92,11 @@ public class RedisUrlCache implements UrlCache {
     @Override
     public void put(String shortCode, String longUrl, Duration ttl) {
         try {
-            redis.opsForValue().set(KEY_PREFIX + shortCode, longUrl, ttl);
+            circuitBreaker.executeRunnable(() -> redis.opsForValue().set(KEY_PREFIX + shortCode, longUrl, ttl));
+        } catch (CallNotPermittedException e) {
+            countFallback();
         } catch (RuntimeException e) {
+            countFallback();
             swallow("put", e);
         }
     }
@@ -89,8 +104,11 @@ public class RedisUrlCache implements UrlCache {
     @Override
     public void putNegative(String shortCode) {
         try {
-            redis.opsForValue().set(KEY_PREFIX + shortCode, NEGATIVE_SENTINEL, NEGATIVE_TTL);
+            circuitBreaker.executeRunnable(() -> redis.opsForValue().set(KEY_PREFIX + shortCode, NEGATIVE_SENTINEL, NEGATIVE_TTL));
+        } catch (CallNotPermittedException e) {
+            countFallback();
         } catch (RuntimeException e) {
+            countFallback();
             swallow("putNegative", e);
         }
     }
@@ -98,8 +116,11 @@ public class RedisUrlCache implements UrlCache {
     @Override
     public void evict(String shortCode) {
         try {
-            redis.delete(KEY_PREFIX + shortCode);
+            circuitBreaker.executeRunnable(() -> redis.delete(KEY_PREFIX + shortCode));
+        } catch (CallNotPermittedException e) {
+            countFallback();
         } catch (RuntimeException e) {
+            countFallback();
             swallow("evict", e);
         }
     }
@@ -107,10 +128,14 @@ public class RedisUrlCache implements UrlCache {
     @Override
     public boolean tryLock(String shortCode) {
         try {
-            Boolean acquired = redis.opsForValue()
-                    .setIfAbsent(LOCK_PREFIX + shortCode, "1", LOCK_TTL);
+            Boolean acquired = circuitBreaker.executeSupplier(() -> redis.opsForValue()
+                    .setIfAbsent(LOCK_PREFIX + shortCode, "1", LOCK_TTL));
             return Boolean.TRUE.equals(acquired);
+        } catch (CallNotPermittedException e) {
+            countFallback();
+            return true;
         } catch (RuntimeException e) {
+            countFallback();
             swallow("tryLock", e);
             // Redis down → no stampede gate; grant so the caller proceeds to the DB
             // (same degradation the NoopCache stub certifies).
@@ -121,8 +146,11 @@ public class RedisUrlCache implements UrlCache {
     @Override
     public void unlock(String shortCode) {
         try {
-            redis.delete(LOCK_PREFIX + shortCode);
+            circuitBreaker.executeRunnable(() -> redis.delete(LOCK_PREFIX + shortCode));
+        } catch (CallNotPermittedException e) {
+            countFallback();
         } catch (RuntimeException e) {
+            countFallback();
             swallow("unlock", e);
         }
     }
@@ -130,5 +158,9 @@ public class RedisUrlCache implements UrlCache {
     private void swallow(String operation, RuntimeException e) {
         errors.increment();
         log.warn("redis cache {} degraded to miss/no-op: {}", operation, e.toString());
+    }
+
+    private void countFallback() {
+        meterRegistry.counter("resilience.fallback.total", "breaker", BREAKER_NAME, "outcome", "fallback").increment();
     }
 }
