@@ -2,7 +2,7 @@ name: url-shortener
 
 x-app-common: &app-common
   build:
-    context: ..
+    context: ../backend
     dockerfile: Dockerfile
   environment: &app-env
     SPRING_PROFILES_ACTIVE: docker
