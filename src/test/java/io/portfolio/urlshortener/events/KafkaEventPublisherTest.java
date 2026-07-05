@@ -28,7 +28,7 @@ class KafkaEventPublisherTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         meterRegistry = new SimpleMeterRegistry();
-        publisher = new KafkaEventPublisher(kafkaTemplate, meterRegistry);
+        publisher = new KafkaEventPublisher(kafkaTemplate, meterRegistry, io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry.ofDefaults());
     }
 
     @Test

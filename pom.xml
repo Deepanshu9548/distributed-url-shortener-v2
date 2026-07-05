@@ -252,6 +252,7 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <groups>chaos</groups>
+                            <excludedGroups>none</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>

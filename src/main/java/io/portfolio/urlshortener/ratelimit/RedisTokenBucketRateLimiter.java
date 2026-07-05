@@ -16,6 +16,9 @@ import org.springframework.stereotype.Component;
 
 import java.time.Clock;
 import java.util.List;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 
 /**
  * Real {@link RateLimiter} (ADR-005). Executes the atomic token-bucket Lua
@@ -52,12 +55,14 @@ public class RedisTokenBucketRateLimiter implements RateLimiter {
     @SuppressWarnings("rawtypes") // spring-data-redis' RedisScript<T>.setResultType takes a Class, so we can't parameterize List's element type.
     private final RedisScript<List> script;
     private final Clock clock;
+    private final CircuitBreaker circuitBreaker;
 
     @org.springframework.beans.factory.annotation.Autowired
     public RedisTokenBucketRateLimiter(StringRedisTemplate redis,
                                       RateLimitProperties properties,
-                                      MeterRegistry meterRegistry) {
-        this(redis, properties, meterRegistry, loadScript(), Clock.systemUTC());
+                                      MeterRegistry meterRegistry,
+                                      CircuitBreakerRegistry circuitBreakerRegistry) {
+        this(redis, properties, meterRegistry, circuitBreakerRegistry, loadScript(), Clock.systemUTC());
     }
 
     /** Package-private for tests: inject a fixed Clock and/or a mocked script. */
@@ -65,6 +70,7 @@ public class RedisTokenBucketRateLimiter implements RateLimiter {
     RedisTokenBucketRateLimiter(StringRedisTemplate redis,
                                 RateLimitProperties properties,
                                 MeterRegistry meterRegistry,
+                                CircuitBreakerRegistry circuitBreakerRegistry,
                                 RedisScript<List> script,
                                 Clock clock) {
         this.redis = redis;
@@ -72,6 +78,7 @@ public class RedisTokenBucketRateLimiter implements RateLimiter {
         this.meterRegistry = meterRegistry;
         this.script = script;
         this.clock = clock;
+        this.circuitBreaker = circuitBreakerRegistry.circuitBreaker("redis-ratelimit");
     }
 
     @SuppressWarnings("rawtypes")
@@ -93,13 +100,13 @@ public class RedisTokenBucketRateLimiter implements RateLimiter {
         }
 
         try {
-            List<Object> result = redis.execute(
+            List<Object> result = circuitBreaker.executeSupplier(() -> redis.execute(
                     script,
                     List.of(key),
                     String.valueOf(config.capacity()),
                     String.valueOf(config.refillPerMillisecond()),
                     String.valueOf(clock.millis()),
-                    "1");
+                    "1"));
 
             if (result == null || result.size() < 2) {
                 // Defensive: unexpected script response shape — treat as store unavailable.
@@ -116,7 +123,11 @@ public class RedisTokenBucketRateLimiter implements RateLimiter {
             }
             count(limiterName, "denied");
             return RateLimitResult.denied(retryAfterMs);
+        } catch (CallNotPermittedException e) {
+            meterRegistry.counter("resilience.fallback.total", "breaker", "redis-ratelimit", "outcome", "fallback").increment();
+            return applyFailurePolicy(limiterName, config);
         } catch (RuntimeException e) {
+            meterRegistry.counter("resilience.fallback.total", "breaker", "redis-ratelimit", "outcome", "fallback").increment();
             log.warn("redis rate limiter '{}' degraded ({}): {}",
                     limiterName, config.failOpen() ? "fail-open" : "fail-closed", e.toString());
             return applyFailurePolicy(limiterName, config);

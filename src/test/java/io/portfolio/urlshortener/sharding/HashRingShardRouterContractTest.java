@@ -16,7 +16,7 @@ class HashRingShardRouterContractTest extends ShardRouterContractTest {
 
     private final HashRingShardRouter router = new HashRingShardRouter(
             new ConsistentHashRing(List.of("shard1", "shard2"), 150),
-            new SimpleMeterRegistry());
+            new SimpleMeterRegistry(), io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry.ofDefaults());
 
     @Override
     protected ShardRouter router() {

@@ -34,7 +34,7 @@ class RoutingDataSourceTest {
         routing.afterPropertiesSet();
         // single-shard ring: every key routes to shard1
         router = new HashRingShardRouter(
-                new ConsistentHashRing(List.of("shard1"), 150), new SimpleMeterRegistry());
+                new ConsistentHashRing(List.of("shard1"), 150), new SimpleMeterRegistry(), io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry.ofDefaults());
         jdbc = new JdbcTemplate(routing);
     }
 
