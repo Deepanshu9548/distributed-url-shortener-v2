@@ -11,39 +11,43 @@ import LinkNew from '@/pages/link-new';
 import LinkDetail from '@/pages/link-detail';
 import NotFound from '@/pages/not-found';
 
+import { ErrorBoundary } from '@/components/error-boundary';
+
 export default function App() {
   return (
-    <BrowserRouter>
-      <div className="min-h-screen flex flex-col bg-background font-sans antialiased">
-        <NavBar />
-        <main className="flex-1">
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            
-            <Route element={<ProtectedRoute />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/links/new" element={<LinkNew />} />
-              <Route path="/links/:code" element={<LinkDetail />} />
-            </Route>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <div className="min-h-screen flex flex-col bg-background font-sans antialiased">
+          <NavBar />
+          <main className="flex-1">
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              
+              <Route element={<ProtectedRoute />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/links/new" element={<LinkNew />} />
+                <Route path="/links/:code" element={<LinkDetail />} />
+              </Route>
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </main>
-      </div>
-      <footer className="py-6 border-t mt-auto text-center text-sm text-muted-foreground">
-        <div className="container mx-auto">
-          <p>
-            Distributed URL Shortener v2 •{' '}
-            <a href="https://github.com/Deepanshu9548/distributed-url-shortener-v2" className="underline hover:text-primary" target="_blank" rel="noreferrer">
-              GitHub
-            </a>
-            {' '}• v{import.meta.env.VITE_APP_VERSION || '1.0.0'}
-          </p>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </main>
         </div>
-      </footer>
-      <Toaster />
-    </BrowserRouter>
+        <footer className="py-6 border-t mt-auto text-center text-sm text-muted-foreground">
+          <div className="container mx-auto">
+            <p>
+              Distributed URL Shortener v2 •{' '}
+              <a href="https://github.com/Deepanshu9548/distributed-url-shortener-v2" className="underline hover:text-primary" target="_blank" rel="noreferrer">
+                GitHub
+              </a>
+              {' '}• v{import.meta.env.VITE_APP_VERSION || '1.0.0'}
+            </p>
+          </div>
+        </footer>
+        <Toaster />
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }

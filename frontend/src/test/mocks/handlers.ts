@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
 export const handlers = [
-  http.post('http://localhost:8080/api/auth/login', async ({ request }) => {
+  http.post('*/api/auth/login', async ({ request }) => {
     const body = (await request.json()) as any;
     if (body.email === 'test@example.com' && body.password === 'Password123') {
       return HttpResponse.json({
@@ -14,7 +14,7 @@ export const handlers = [
     return HttpResponse.json({ error: 'Invalid credentials' }, { status: 401 });
   }),
 
-  http.post('http://localhost:8080/api/auth/refresh', async ({ request }) => {
+  http.post('*/api/auth/refresh', async ({ request }) => {
     const body = (await request.json()) as any;
     if (body.refreshToken === 'mock-refresh-token') {
       return HttpResponse.json({
@@ -27,7 +27,7 @@ export const handlers = [
     return HttpResponse.json({ error: 'Invalid token' }, { status: 401 });
   }),
 
-  http.get('http://localhost:8080/api/me/links', ({ request }) => {
+  http.get('*/api/me/links', ({ request }) => {
     const auth = request.headers.get('Authorization');
     if (!auth || !auth.startsWith('Bearer ')) {
       return HttpResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -43,7 +43,7 @@ export const handlers = [
     });
   }),
 
-  http.post('http://localhost:8080/api/links', async ({ request }) => {
+  http.post('*/api/links', async ({ request }) => {
     const auth = request.headers.get('Authorization');
     if (!auth || !auth.startsWith('Bearer ')) {
       return HttpResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -60,7 +60,7 @@ export const handlers = [
     }, { status: 201 });
   }),
 
-  http.get('http://localhost:8080/api/links/:code', ({ params, request }) => {
+  http.get('*/api/links/:code', ({ params, request }) => {
     if (params.code === 'owneronly') {
       const auth = request.headers.get('Authorization');
       if (!auth) return HttpResponse.json({ error: 'Not found' }, { status: 404 });
@@ -77,7 +77,7 @@ export const handlers = [
     });
   }),
 
-  http.get('http://localhost:8080/api/links/:code/stats', ({ params }) => {
+  http.get('*/api/links/:code/stats', ({ params }) => {
     return HttpResponse.json({
       shortCode: params.code,
       clickCount: 10,

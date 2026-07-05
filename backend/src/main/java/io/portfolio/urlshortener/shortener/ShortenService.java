@@ -68,29 +68,39 @@ public class ShortenService {
         Instant expiresAt = resolveExpiry(request, now);
 
         boolean custom = hasText(request.customAlias());
-        long id = idGenerator.nextId();
-        String shortCode;
-        if (custom) {
-            validator.validateAlias(request.customAlias());
-            shortCode = request.customAlias();
-            String code = shortCode;
-            boolean taken = router.executeRead(code, () -> links.existsByShortCode(code));
-            if (taken) {
-                throw new AliasConflictException(code);
-            }
-        } else {
-            shortCode = Base62.encode(id);
-        }
-
-        Link link = new Link(id, shortCode, request.longUrl(), null, now, expiresAt, custom);
-        try {
-            router.executeWrite(shortCode, () -> links.save(link));
-        } catch (DataIntegrityViolationException e) {
+        
+        int maxAttempts = custom ? 1 : 3;
+        int attempts = 0;
+        String shortCode = null;
+        Link link = null;
+        
+        while (attempts < maxAttempts) {
+            attempts++;
+            long id = idGenerator.nextId();
+            
             if (custom) {
-                // lost the uniqueness race between the exists-check and the insert
-                throw new AliasConflictException(shortCode);
+                validator.validateAlias(request.customAlias());
+                shortCode = request.customAlias();
+                String code = shortCode;
+                boolean taken = router.executeRead(code, () -> links.existsByShortCode(code));
+                if (taken) {
+                    throw new AliasConflictException(code);
+                }
+            } else {
+                shortCode = Base62.encode(id);
             }
-            throw e;
+
+            Link finalLink = new Link(id, shortCode, request.longUrl(), null, now, expiresAt, custom);
+            link = finalLink;
+            try {
+                router.executeWrite(shortCode, () -> links.save(finalLink));
+                break; // Success
+            } catch (DataIntegrityViolationException e) {
+                if (custom || attempts == maxAttempts) {
+                    throw new AliasConflictException(shortCode);
+                }
+                // If not custom and we haven't reached maxAttempts, we loop and try again
+            }
         }
 
         if (hasText(idempotencyKey)) {
