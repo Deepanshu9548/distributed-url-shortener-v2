@@ -34,13 +34,30 @@ commits (re-tagging the checkpoints afterwards).
 | M1-C auth (JWT, users, ownership CRUD) | ✅ DONE | `checkpoint/m1-c` |
 | M1-D analytics (Kafka, consumers, stats) | ✅ DONE | `checkpoint/m1-d` |
 | M2 integration (swap stubs, filter order, e2e) | ✅ DONE | `checkpoint/m2` |
-| M3-F resilience (breakers, chaos, degradation matrix) | ⬜ next | — |
-| M3-G observability (metrics, dashboards, logs) | ⬜ | — |
-| M4 load + packaging (JMeter, README, demo, defense notes) | ⬜ | — |
+| M3-F resilience (breakers, chaos, degradation matrix) | ✅ DONE | `checkpoint/m3-f` |
+| M3-G observability (metrics, dashboards, logs) | ✅ DONE | `checkpoint/m3-g` |
+| M4 load + packaging (JMeter, README, demo, defense notes) | ✅ DONE | `checkpoint/m4` |
 
 ## NEXT
-Execute M3-F resilience.
-Goal: Resilience4j breakers on DB/Redis/Kafka calls, chaos tests, degradation matrix doc using the frozen decisions list.
+PROJECT COMPLETE — next queued work is the Spring Boot 4 upgrade, owned separately.
+
+### Notes from M3-F
+- Resilience4j breakers added for `redis-cache`, `redis-ratelimit`, `kafka-publisher`, and per-shard (`shard-shard1`, etc.).
+- Fallback semantics preserve original degradation contracts (e.g., redis cache miss on failure, pass-through on shard failure).
+- Added `resilience.fallback.total` metric to track fallback execution.
+- Chaos tests added (`@Tag("chaos")`) and verify fail-fast and half-open transitions. Run with `mvn test -Pchaos-tests -Dgroups=chaos -DexcludedGroups=""`.
+- Degradation matrix documented in `docs/DEGRADATION_MATRIX.md`.
+
+### Notes from M3-G
+- Structured logging using `logstash-logback-encoder` configured in `logback-spring.xml` (JSON output for non-local profiles).
+- `RequestIdFilter` added to extract or generate `X-Request-Id`, put it in MDC (`requestId`), and add to response header.
+- Grafana dashboard added in `deploy/monitoring/dashboards/url_shortener.json`.
+
+### Notes from M4
+- JMeter load test plans (`redirect.jmx`, `write.jmx`) and a seed script (`seed.sh`) added to `load-tests/`.
+- End-to-end `demo.sh` script added to `demo/` directory.
+- Architectural reasoning documented in `docs/DEFENSE_NOTES.md`.
+- `README.md` updated with architectural diagrams, quickstart, and load test results placeholder.
 
 ### Notes from M2 for later tracks
 - `ShardJpaConfig` has explicitly declared `@Primary` on its `EntityManagerFactory` and `TransactionManager` to avoid ambiguity with `ControlDbConfig`'s beans when both are loaded in context.

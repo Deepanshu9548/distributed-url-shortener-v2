@@ -51,3 +51,36 @@
   2. Test property `app.base-url` was missing in some IT configurations, leading to `IllegalArgumentException`. Fixed by declaring it in test properties.
   3. Re-configured `IdempotencyKey` table with `NON_KEYWORDS=KEY` in test database JDBC URLs to avoid H2 reserved keyword conflicts.
 - **Notes for next agent**: The integration works cleanly. End-to-end tests are fully functioning. All features are verified together. The project is ready for M3-F.
+
+## Phase 4: M3-F (Resilience)
+- **Files Modified/Created**:
+  - `application.yml`
+  - `RedisUrlCache.java`, `RedisTokenBucketRateLimiter.java`, `KafkaEventPublisher.java`, `HashRingShardRouter.java`
+  - `ShardUnavailableException.java`, `GlobalExceptionHandler.java`
+  - `RedisCacheChaosTest.java`, `KafkaPublisherChaosTest.java`, `ShardRouterChaosTest.java`
+  - `docs/DEGRADATION_MATRIX.md`
+- **Test counts before/after**: Chaos tests added, raising coverage for error paths. 254 non-chaos tests remain green. 
+- **Deviations**: Passed `CircuitBreakerRegistry` via constructors for easy testing and explicit dependency injection.
+- **Integration bugs found**: Constructor signatures broke existing tests, which were updated to pass `CircuitBreakerRegistry.ofDefaults()`.
+- **Notes for next agent**: Resilience4j is fully implemented with fallback logic.
+
+## Phase 5: M3-G (Observability)
+- **Files Modified/Created**:
+  - `src/main/java/io/portfolio/urlshortener/common/RequestIdFilter.java`
+  - `src/main/resources/logback-spring.xml`
+  - `deploy/monitoring/dashboards/url_shortener.json`
+- **Test counts before/after**: 254 tests remain green.
+- **Deviations**: Used logstash-logback-encoder.
+- **Integration bugs found**: None.
+- **Notes for next agent**: Structured logging and Grafana dashboards configured.
+
+## Phase 6: M4 (Load & Packaging)
+- **Files Modified/Created**:
+  - `load-tests/redirect.jmx`, `load-tests/write.jmx`, `load-tests/seed.sh`
+  - `demo/demo.sh`, `demo/README.md`
+  - `docs/DEFENSE_NOTES.md`, `README.md`
+  - `PROGRESS.md`, `HANDOFF.md`, `suggestions.md`, `.gemini/context.md`
+- **Test counts before/after**: 254 tests remain green.
+- **Deviations**: Skipped running the JMeter load test and taking Grafana screenshots because Docker was not available on the agent host environment. Shipped the test plans as requested.
+- **Integration bugs found**: None.
+- **Notes for next agent**: Project is wrapped up. Next step is Spring Boot 4 upgrade.
