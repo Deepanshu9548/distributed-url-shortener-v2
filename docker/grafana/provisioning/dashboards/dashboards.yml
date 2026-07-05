@@ -1,0 +1,15 @@
+# Grafana dashboard provisioning — picks up every JSON file in this dir
+# on startup. See docker-compose.yml for the volume mount.
+apiVersion: 1
+
+providers:
+  - name: url-shortener
+    orgId: 1
+    folder: URL Shortener
+    type: file
+    disableDeletion: false
+    editable: true
+    allowUiUpdates: true
+    updateIntervalSeconds: 30
+    options:
+      path: /etc/grafana/provisioning/dashboards
