@@ -10,6 +10,9 @@ x-app-common: &app-common
     # Track B: real consistent-hash router + per-shard datasources.
     # JDBC URLs default to the compose hostnames in application.yml.
     SHARDING_ENABLED: "true"
+    CONTROL_DB_USER: shortener
+    CONTROL_DB_PASSWORD: shortener
+    SPRING_DATA_REDIS_HOST: redis
   depends_on:
     shard1-primary: { condition: service_healthy }
     shard1-replica: { condition: service_healthy }
