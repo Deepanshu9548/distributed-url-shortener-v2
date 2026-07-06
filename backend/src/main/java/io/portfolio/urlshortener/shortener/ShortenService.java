@@ -54,7 +54,7 @@ public class ShortenService {
     public record CreationResult(LinkResponse link, boolean replayed) {
     }
 
-    public CreationResult create(CreateLinkRequest request, String idempotencyKey, String requestId) {
+    public CreationResult create(CreateLinkRequest request, String idempotencyKey, String requestId, Long userId) {
         Instant now = Instant.now();
 
         if (hasText(idempotencyKey)) {
@@ -90,7 +90,7 @@ public class ShortenService {
                 shortCode = Base62.encode(id);
             }
 
-            Link finalLink = new Link(id, shortCode, request.longUrl(), null, now, expiresAt, custom);
+            Link finalLink = new Link(id, shortCode, request.longUrl(), userId, now, expiresAt, custom);
             link = finalLink;
             try {
                 router.executeWrite(shortCode, () -> links.save(finalLink));
@@ -108,7 +108,7 @@ public class ShortenService {
             router.executeWrite(idempotencyKey, () -> idempotencyKeys.save(record));
         }
 
-        publisher.publishLinkEvent(LinkEvent.of(LinkEvent.Type.CREATED, shortCode, null, requestId));
+        publisher.publishLinkEvent(LinkEvent.of(LinkEvent.Type.CREATED, shortCode, userId, requestId));
         return new CreationResult(toResponse(link), false);
     }
 

@@ -19,10 +19,11 @@ import org.springframework.context.annotation.Configuration;
 public class FilterRegistrationConfig {
 
     @Bean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnBean(RateLimitFilter.class)
     public FilterRegistrationBean<RateLimitFilter> disableRateLimitAutoRegistration(
-            ObjectProvider<RateLimitFilter> rateLimitFilter) {
+            RateLimitFilter rateLimitFilter) {
         FilterRegistrationBean<RateLimitFilter> reg = new FilterRegistrationBean<>();
-        RateLimitFilter f = rateLimitFilter.getIfAvailable();
+        RateLimitFilter f = rateLimitFilter;
         if (f != null) {
             reg.setFilter(f);
         }

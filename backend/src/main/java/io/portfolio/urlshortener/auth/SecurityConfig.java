@@ -70,6 +70,8 @@ public class SecurityConfig {
                                 "/api/auth/register", "/api/auth/login", "/api/auth/refresh").permitAll()
                         // Public link metadata read (README says so)
                         .requestMatchers(HttpMethod.GET, "/api/links/*").permitAll()
+                        // Public link creation (anonymous shortening)
+                        .requestMatchers(HttpMethod.POST, "/api/links").permitAll()
                         // Redirect route — single-segment short code, regex-guarded
                         .requestMatchers(RegexRequestMatcher.regexMatcher(HttpMethod.GET, REDIRECT_PATTERN)).permitAll()
                         // Everything else under /api requires auth

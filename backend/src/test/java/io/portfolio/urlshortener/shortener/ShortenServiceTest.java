@@ -71,7 +71,7 @@ class ShortenServiceTest {
 
     @Test
     void createsLinkWithBase62CodeAndPublishesCreatedEvent() {
-        var result = service.create(request(LONG_URL), null, REQUEST_ID);
+        var result = service.create(request(LONG_URL), null, REQUEST_ID, null);
 
         assertThat(result.replayed()).isFalse();
         assertThat(result.link().longUrl()).isEqualTo(LONG_URL);
@@ -93,20 +93,20 @@ class ShortenServiceTest {
 
     @Test
     void routesWriteByShortCode() {
-        var result = service.create(request(LONG_URL), null, REQUEST_ID);
+        var result = service.create(request(LONG_URL), null, REQUEST_ID, null);
         verify(router).executeWrite(eq(result.link().shortCode()), any());
     }
 
     @Test
     void sameLongUrlTwiceYieldsDistinctCodes_noDedup() {
-        var first = service.create(request(LONG_URL), null, REQUEST_ID);
-        var second = service.create(request(LONG_URL), null, REQUEST_ID);
+        var first = service.create(request(LONG_URL), null, REQUEST_ID, null);
+        var second = service.create(request(LONG_URL), null, REQUEST_ID, null);
         assertThat(first.link().shortCode()).isNotEqualTo(second.link().shortCode());
     }
 
     @Test
     void invalidUrlRejectedBeforeAnyPersistence() {
-        assertThatThrownBy(() -> service.create(request("ftp://example.com"), null, REQUEST_ID))
+        assertThatThrownBy(() -> service.create(request("ftp://example.com"), null, REQUEST_ID, null))
                 .isInstanceOf(ValidationException.class);
         verify(links, never()).save(any());
         verify(publisher, never()).publishLinkEvent(any());
@@ -114,7 +114,7 @@ class ShortenServiceTest {
 
     @Test
     void ttlSecondsBecomesExpiresAt() {
-        var result = service.create(new CreateLinkRequest(LONG_URL, null, null, 3600L), null, REQUEST_ID);
+        var result = service.create(new CreateLinkRequest(LONG_URL, null, null, 3600L), null, REQUEST_ID, null);
         assertThat(result.link().expiresAt())
                 .isCloseTo(Instant.now().plusSeconds(3600), within(5, ChronoUnit.SECONDS));
     }
@@ -122,17 +122,17 @@ class ShortenServiceTest {
     @Test
     void explicitExpiresAtWinsOverTtl() {
         Instant explicit = Instant.now().plus(2, ChronoUnit.DAYS).truncatedTo(ChronoUnit.MILLIS);
-        var result = service.create(new CreateLinkRequest(LONG_URL, null, explicit, 60L), null, REQUEST_ID);
+        var result = service.create(new CreateLinkRequest(LONG_URL, null, explicit, 60L), null, REQUEST_ID, null);
         assertThat(result.link().expiresAt()).isEqualTo(explicit);
     }
 
     @Test
     void pastExpiresAtAndNonPositiveTtlAreRejected() {
         assertThatThrownBy(() -> service.create(
-                new CreateLinkRequest(LONG_URL, null, Instant.now().minusSeconds(60), null), null, REQUEST_ID))
+                new CreateLinkRequest(LONG_URL, null, Instant.now().minusSeconds(60), null), null, REQUEST_ID, null))
                 .isInstanceOf(ValidationException.class);
         assertThatThrownBy(() -> service.create(
-                new CreateLinkRequest(LONG_URL, null, null, 0L), null, REQUEST_ID))
+                new CreateLinkRequest(LONG_URL, null, null, 0L), null, REQUEST_ID, null))
                 .isInstanceOf(ValidationException.class);
     }
 
@@ -140,7 +140,7 @@ class ShortenServiceTest {
 
     @Test
     void customAliasIsUsedAsShortCode() {
-        var result = service.create(new CreateLinkRequest(LONG_URL, "my-alias", null, null), null, REQUEST_ID);
+        var result = service.create(new CreateLinkRequest(LONG_URL, "my-alias", null, null), null, REQUEST_ID, null);
         assertThat(result.link().shortCode()).isEqualTo("my-alias");
         ArgumentCaptor<Link> saved = ArgumentCaptor.forClass(Link.class);
         verify(links).save(saved.capture());
@@ -151,7 +151,7 @@ class ShortenServiceTest {
     void takenAliasThrowsConflict() {
         when(links.existsByShortCode("my-alias")).thenReturn(true);
         assertThatThrownBy(() -> service.create(
-                new CreateLinkRequest(LONG_URL, "my-alias", null, null), null, REQUEST_ID))
+                new CreateLinkRequest(LONG_URL, "my-alias", null, null), null, REQUEST_ID, null))
                 .isInstanceOf(AliasConflictException.class);
         verify(links, never()).save(any());
     }
@@ -160,7 +160,7 @@ class ShortenServiceTest {
     void aliasUniquenessRaceLostAtInsertThrowsConflict() {
         when(links.save(any(Link.class))).thenThrow(new DataIntegrityViolationException("duplicate key"));
         assertThatThrownBy(() -> service.create(
-                new CreateLinkRequest(LONG_URL, "my-alias", null, null), null, REQUEST_ID))
+                new CreateLinkRequest(LONG_URL, "my-alias", null, null), null, REQUEST_ID, null))
                 .isInstanceOf(AliasConflictException.class);
         verify(publisher, never()).publishLinkEvent(any());
     }
@@ -168,7 +168,7 @@ class ShortenServiceTest {
     @Test
     void blocklistedAliasRejected() {
         assertThatThrownBy(() -> service.create(
-                new CreateLinkRequest(LONG_URL, "actuator", null, null), null, REQUEST_ID))
+                new CreateLinkRequest(LONG_URL, "actuator", null, null), null, REQUEST_ID, null))
                 .isInstanceOf(ValidationException.class)
                 .hasMessageContaining("reserved");
         verify(links, never()).save(any());
@@ -184,7 +184,7 @@ class ShortenServiceTest {
         when(links.findByShortCode("abc123"))
                 .thenReturn(Optional.of(new Link(1L, "abc123", LONG_URL, null, created, null, false)));
 
-        var result = service.create(request(LONG_URL), "idem-1", REQUEST_ID);
+        var result = service.create(request(LONG_URL), "idem-1", REQUEST_ID, null);
 
         assertThat(result.replayed()).isTrue();
         assertThat(result.link().shortCode()).isEqualTo("abc123");
@@ -198,7 +198,7 @@ class ShortenServiceTest {
         when(idempotencyKeys.findById("idem-old"))
                 .thenReturn(Optional.of(new IdempotencyKey("idem-old", "old123", stale)));
 
-        var result = service.create(request(LONG_URL), "idem-old", REQUEST_ID);
+        var result = service.create(request(LONG_URL), "idem-old", REQUEST_ID, null);
 
         assertThat(result.replayed()).isFalse();
         verify(links).save(any(Link.class));
@@ -206,7 +206,7 @@ class ShortenServiceTest {
 
     @Test
     void freshCreateWithIdempotencyKeyStoresTheKey() {
-        var result = service.create(request(LONG_URL), "idem-new", REQUEST_ID);
+        var result = service.create(request(LONG_URL), "idem-new", REQUEST_ID, null);
 
         ArgumentCaptor<IdempotencyKey> stored = ArgumentCaptor.forClass(IdempotencyKey.class);
         verify(idempotencyKeys).save(stored.capture());

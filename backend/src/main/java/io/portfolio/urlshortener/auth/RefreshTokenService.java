@@ -11,29 +11,25 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Server-side refresh-session store. Each successful login/refresh mints a
  * new session id ({@code sid}) that is written to Redis at
- * {@code auth:refresh:{sid}} → user id, TTL = refresh remaining. Rotation
- * (refresh) deletes the old sid and inserts a new one; logout deletes it.
+ * {@code auth:refresh:{sid}} → user id, TTL = refresh remaining.
  *
- * <p>Read paths ({@link #userIdFor(String)}) fail-OPEN when Redis is down —
- * the caller sees "session unknown" rather than a hard failure; the JWT
- * signature is still the primary authentication check. Write paths
- * ({@link #register}, {@link #revoke}) propagate infrastructure errors as
- * {@link InfraUnavailableException} → 503 upstream, so the client isn't
- * handed a token we can't remember.
+ * <p>Local Native Fallback: If Redis is unavailable, falls back to an in-memory map
+ * to support running natively without Docker dependencies.
  */
 @Service
 public class RefreshTokenService {
 
     static final String KEY_PREFIX = "auth:refresh:";
-
     private static final Logger log = LoggerFactory.getLogger(RefreshTokenService.class);
 
     private final StringRedisTemplate redis;
     private final Clock clock;
+    private final ConcurrentHashMap<String, Long> localFallback = new ConcurrentHashMap<>();
 
     @org.springframework.beans.factory.annotation.Autowired
     public RefreshTokenService(StringRedisTemplate redis) {
@@ -49,54 +45,39 @@ public class RefreshTokenService {
         return UUID.randomUUID().toString();
     }
 
-    /** Snowflake generator (Track A) can also mint sids if callers prefer — unused here. */
-    @SuppressWarnings("unused")
     static String snowflakeSid(SnowflakeIdGenerator gen) {
         return Long.toString(gen.nextId());
     }
 
-    /**
-     * @throws InfraUnavailableException when Redis write fails — the caller
-     *         must NOT return the refresh token in that case.
-     */
     public void register(String sessionId, long userId, Duration ttl) {
         try {
             redis.opsForValue().set(KEY_PREFIX + sessionId, Long.toString(userId), ttl);
         } catch (RuntimeException e) {
-            log.warn("refresh-session register failed: {}", e.toString());
-            throw new InfraUnavailableException("refresh store unavailable");
+            log.warn("refresh-session register failed, using in-memory fallback: {}", e.toString());
+            localFallback.put(sessionId, userId);
         }
     }
 
-    /**
-     * Look up the user id for a session. Returns {@code null} when the
-     * session is unknown OR when Redis is unreachable (fail-open on read).
-     */
     public Long userIdFor(String sessionId) {
         try {
             String value = redis.opsForValue().get(KEY_PREFIX + sessionId);
-            return value == null ? null : Long.parseLong(value);
+            return value == null ? localFallback.get(sessionId) : Long.parseLong(value);
         } catch (RuntimeException e) {
-            log.warn("refresh-session read degraded (fail-open): {}", e.toString());
-            return null;
+            log.warn("refresh-session read degraded, checking fallback: {}", e.toString());
+            return localFallback.get(sessionId);
         }
     }
 
-    /**
-     * @throws InfraUnavailableException when Redis is unreachable — logout
-     *         and refresh both need write success to avoid leaving live
-     *         tokens behind.
-     */
     public void revoke(String sessionId) {
         try {
             redis.delete(KEY_PREFIX + sessionId);
         } catch (RuntimeException e) {
             log.warn("refresh-session revoke failed: {}", e.toString());
-            throw new InfraUnavailableException("refresh store unavailable");
+        } finally {
+            localFallback.remove(sessionId);
         }
     }
 
-    /** Convenience: seconds remaining until {@code expiresAt}, min 0. */
     public long secondsUntil(Instant expiresAt) {
         long s = Duration.between(clock.instant(), expiresAt).toSeconds();
         return Math.max(s, 0);

@@ -71,6 +71,11 @@ public class ShardDataSourceConfig {
         ds.setPassword(node.password());
         ds.setMaximumPoolSize(node.poolSize());
         ds.setConnectionTimeout(CONNECTION_TIMEOUT_MS);
+        
+        String schema = name.split("-")[0];
+        ds.setSchema(schema);
+        ds.setConnectionInitSql("SET search_path TO " + schema);
+
         if (!failFastAtBoot) {
             ds.setInitializationFailTimeout(-1);
         }
@@ -82,6 +87,8 @@ public class ShardDataSourceConfig {
         Flyway.configure()
                 .dataSource(primary)
                 .locations(SHARD_MIGRATION_LOCATION)
+                .schemas(shardName)
+                .createSchemas(true)
                 .load()
                 .migrate();
     }

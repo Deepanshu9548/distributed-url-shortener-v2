@@ -41,7 +41,7 @@ class LinkControllerTest {
 
     @Test
     void createReturns201WithBody() throws Exception {
-        when(shortenService.create(any(), isNull(), anyString()))
+        when(shortenService.create(any(), isNull(), anyString(), isNull()))
                 .thenReturn(new ShortenService.CreationResult(RESPONSE, false));
 
         mockMvc.perform(post("/api/links")
@@ -55,7 +55,7 @@ class LinkControllerTest {
 
     @Test
     void idempotentReplayReturns200() throws Exception {
-        when(shortenService.create(any(), eq("idem-1"), anyString()))
+        when(shortenService.create(any(), eq("idem-1"), anyString(), isNull()))
                 .thenReturn(new ShortenService.CreationResult(RESPONSE, true));
 
         mockMvc.perform(post("/api/links")
@@ -68,7 +68,7 @@ class LinkControllerTest {
 
     @Test
     void validationErrorReturns400WithErrorBody() throws Exception {
-        when(shortenService.create(any(), isNull(), anyString()))
+        when(shortenService.create(any(), isNull(), anyString(), isNull()))
                 .thenThrow(new ValidationException("longUrl must use http or https"));
 
         mockMvc.perform(post("/api/links")
@@ -89,7 +89,7 @@ class LinkControllerTest {
 
     @Test
     void aliasConflictReturns409WithErrorBody() throws Exception {
-        when(shortenService.create(any(), isNull(), anyString()))
+        when(shortenService.create(any(), isNull(), anyString(), isNull()))
                 .thenThrow(new AliasConflictException("my-alias"));
 
         mockMvc.perform(post("/api/links")

@@ -36,14 +36,6 @@ export default function Landing() {
   });
 
   const onSubmit = async (data: { longUrl: string }) => {
-    if (!isAuthenticated()) {
-      // Unauthenticated writes are gated by backend
-      // Save the URL to local storage to pre-fill after login if desired, or just redirect
-      toast.info('Please sign up or log in to shorten URLs');
-      navigate('/register');
-      return;
-    }
-
     try {
       const res = await api.post('/api/links', {
         longUrl: data.longUrl,

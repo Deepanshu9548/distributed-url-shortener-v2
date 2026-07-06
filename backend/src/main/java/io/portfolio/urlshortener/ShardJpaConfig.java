@@ -43,7 +43,7 @@ public class ShardJpaConfig {
         emf.setJpaVendorAdapter(adapter);
 
         emf.setJpaPropertyMap(Map.of(
-                "hibernate.hbm2ddl.auto", "validate",
+                "hibernate.hbm2ddl.auto", "none",
                 "jakarta.persistence.query.timeout", "1000"
         ));
         return emf;

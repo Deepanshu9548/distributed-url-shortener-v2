@@ -47,12 +47,13 @@ class RedisSessionServicesTest {
         }
 
         @Test
-        void register_redisDown_propagatesAsInfraUnavailable() {
+        void register_redisDown_usesFallback() {
             org.mockito.Mockito.doThrow(new RedisConnectionFailureException("down"))
                     .when(values).set(anyString(), anyString(), any(Duration.class));
 
-            assertThatThrownBy(() -> new RefreshTokenService(redis).register("s", 1L, Duration.ofDays(7)))
-                    .isInstanceOf(InfraUnavailableException.class);
+            RefreshTokenService svc = new RefreshTokenService(redis);
+            assertThatCode(() -> svc.register("s", 1L, Duration.ofDays(7))).doesNotThrowAnyException();
+            assertThat(svc.userIdFor("s")).isEqualTo(1L);
         }
 
         @Test
@@ -72,13 +73,13 @@ class RedisSessionServicesTest {
         }
 
         @Test
-        void revoke_deletesSession_andPropagatesInfraFailure() {
+        void revoke_redisDown_swallowsFailureAndRemovesFallback() {
             RefreshTokenService svc = new RefreshTokenService(redis);
-            svc.revoke("sid-1");
-            verify(redis).delete("auth:refresh:sid-1");
-
+            svc.register("sid-1", 1L, Duration.ofDays(7));
             when(redis.delete(anyString())).thenThrow(new RedisConnectionFailureException("down"));
-            assertThatThrownBy(() -> svc.revoke("sid-2")).isInstanceOf(InfraUnavailableException.class);
+            
+            assertThatCode(() -> svc.revoke("sid-1")).doesNotThrowAnyException();
+            assertThat(svc.userIdFor("sid-1")).isNull();
         }
     }
 

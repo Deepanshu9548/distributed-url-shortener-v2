@@ -31,8 +31,17 @@ public class LinkController {
             @RequestBody CreateLinkRequest request,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
             @RequestHeader(value = "X-Request-Id", required = false) String requestId) {
+        
+        Long userId = null;
+        var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof String principalStr) {
+            try {
+                userId = Long.parseLong(principalStr);
+            } catch (NumberFormatException ignored) {}
+        }
+
         String rid = (requestId == null || requestId.isBlank()) ? UUID.randomUUID().toString() : requestId;
-        ShortenService.CreationResult result = shortenService.create(request, idempotencyKey, rid);
+        ShortenService.CreationResult result = shortenService.create(request, idempotencyKey, rid, userId);
         return ResponseEntity
                 .status(result.replayed() ? HttpStatus.OK : HttpStatus.CREATED)
                 .body(result.link());

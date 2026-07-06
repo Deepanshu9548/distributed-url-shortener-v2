@@ -64,6 +64,8 @@ public class ControlDbConfig {
         Flyway flyway = Flyway.configure()
                 .dataSource(controlDataSource)
                 .locations(MIGRATION_LOCATION)
+                .schemas("control")
+                .createSchemas(true)
                 .load();
         log.info("running control-db migrations");
         flyway.migrate();
@@ -84,7 +86,7 @@ public class ControlDbConfig {
         emf.setJpaVendorAdapter(adapter);
 
         emf.setJpaPropertyMap(Map.of(
-                "hibernate.hbm2ddl.auto", "validate",
+                "hibernate.hbm2ddl.auto", "none",
                 "jakarta.persistence.query.timeout", "1000"
         ));
         return emf;

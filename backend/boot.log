@@ -1,0 +1,209 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ---------------------< io.portfolio:url-shortener >---------------------
+[INFO] Building Distributed URL Shortener v2 2.0.0
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:3.3.5:run (default-cli) > test-compile @ url-shortener >>>
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ url-shortener ---
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] Copying 6 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ url-shortener ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ url-shortener ---
+[INFO] Copying 2 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ url-shortener ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] <<< spring-boot:3.3.5:run (default-cli) < test-compile @ url-shortener <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:3.3.5:run (default-cli) @ url-shortener ---
+[INFO] Attaching agents: []
+12:20:39,255 |-INFO in ch.qos.logback.classic.LoggerContext[default] - This is logback-classic version 1.5.11
+12:20:39,257 |-INFO in ch.qos.logback.classic.util.ContextInitializer@72c28d64 - Here is a list of configurators discovered as a service, by rank: 
+12:20:39,257 |-INFO in ch.qos.logback.classic.util.ContextInitializer@72c28d64 -   org.springframework.boot.logging.logback.RootLogLevelConfigurator
+12:20:39,257 |-INFO in ch.qos.logback.classic.util.ContextInitializer@72c28d64 - They will be invoked in order until ExecutionStatus.DO_NOT_INVOKE_NEXT_IF_ANY is returned.
+12:20:39,257 |-INFO in ch.qos.logback.classic.util.ContextInitializer@72c28d64 - Constructed configurator of type class org.springframework.boot.logging.logback.RootLogLevelConfigurator
+12:20:39,259 |-INFO in ch.qos.logback.classic.util.ContextInitializer@72c28d64 - org.springframework.boot.logging.logback.RootLogLevelConfigurator.configure() call lasted 0 milliseconds. ExecutionStatus=INVOKE_NEXT_IF_ANY
+12:20:39,259 |-INFO in ch.qos.logback.classic.util.ContextInitializer@72c28d64 - Trying to configure with ch.qos.logback.classic.joran.SerializedModelConfigurator
+12:20:39,259 |-INFO in ch.qos.logback.classic.util.ContextInitializer@72c28d64 - Constructed configurator of type class ch.qos.logback.classic.joran.SerializedModelConfigurator
+12:20:39,260 |-INFO in ch.qos.logback.classic.LoggerContext[default] - Could NOT find resource [logback-test.scmo]
+12:20:39,260 |-INFO in ch.qos.logback.classic.LoggerContext[default] - Could NOT find resource [logback.scmo]
+12:20:39,260 |-INFO in ch.qos.logback.classic.util.ContextInitializer@72c28d64 - ch.qos.logback.classic.joran.SerializedModelConfigurator.configure() call lasted 1 milliseconds. ExecutionStatus=INVOKE_NEXT_IF_ANY
+12:20:39,260 |-INFO in ch.qos.logback.classic.util.ContextInitializer@72c28d64 - Trying to configure with ch.qos.logback.classic.util.DefaultJoranConfigurator
+12:20:39,260 |-INFO in ch.qos.logback.classic.util.ContextInitializer@72c28d64 - Constructed configurator of type class ch.qos.logback.classic.util.DefaultJoranConfigurator
+12:20:39,260 |-INFO in ch.qos.logback.classic.LoggerContext[default] - Could NOT find resource [logback-test.xml]
+12:20:39,260 |-INFO in ch.qos.logback.classic.LoggerContext[default] - Could NOT find resource [logback.xml]
+12:20:39,260 |-INFO in ch.qos.logback.classic.util.ContextInitializer@72c28d64 - ch.qos.logback.classic.util.DefaultJoranConfigurator.configure() call lasted 0 milliseconds. ExecutionStatus=INVOKE_NEXT_IF_ANY
+12:20:39,260 |-INFO in ch.qos.logback.classic.util.ContextInitializer@72c28d64 - Trying to configure with ch.qos.logback.classic.BasicConfigurator
+12:20:39,261 |-INFO in ch.qos.logback.classic.util.ContextInitializer@72c28d64 - Constructed configurator of type class ch.qos.logback.classic.BasicConfigurator
+12:20:39,261 |-INFO in ch.qos.logback.classic.BasicConfigurator@6492fab5 - Setting up default configuration.
+12:20:39,270 |-INFO in ch.qos.logback.classic.util.ContextInitializer@72c28d64 - ch.qos.logback.classic.BasicConfigurator.configure() call lasted 9 milliseconds. ExecutionStatus=NEUTRAL
+12:20:39,499 |-INFO in ch.qos.logback.core.joran.util.ConfigurationWatchListUtil@2c5529ab - Adding [jar:file:/Users/deepanshu/.m2/repository/org/springframework/boot/spring-boot/3.3.5/spring-boot-3.3.5.jar!/org/springframework/boot/logging/logback/defaults.xml] to configuration watch list.
+12:20:39,499 |-INFO in ConfigurationWatchList(mainURL=file:/Users/deepanshu/Documents/GitHub/frontend/distributed-url-shortener-v2/backend/target/classes/logback-spring.xml, fileWatchList={/Users/deepanshu/Documents/GitHub/frontend/distributed-url-shortener-v2/backend/target/classes/logback-spring.xml}, urlWatchList=[}) - Cannot watch [jar:file:/Users/deepanshu/.m2/repository/org/springframework/boot/spring-boot/3.3.5/spring-boot-3.3.5.jar!/org/springframework/boot/logging/logback/defaults.xml] as its protocol is not one of file, http or https.
+12:20:39,501 |-INFO in ch.qos.logback.core.model.processor.ConversionRuleModelHandler - registering conversion word applicationName with class [org.springframework.boot.logging.logback.ApplicationNameConverter]
+12:20:39,501 |-INFO in ch.qos.logback.core.model.processor.ConversionRuleModelHandler - registering conversion word clr with class [org.springframework.boot.logging.logback.ColorConverter]
+12:20:39,501 |-INFO in ch.qos.logback.core.model.processor.ConversionRuleModelHandler - registering conversion word correlationId with class [org.springframework.boot.logging.logback.CorrelationIdConverter]
+12:20:39,501 |-INFO in ch.qos.logback.core.model.processor.ConversionRuleModelHandler - registering conversion word wex with class [org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter]
+12:20:39,501 |-INFO in ch.qos.logback.core.model.processor.ConversionRuleModelHandler - registering conversion word wEx with class [org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter]
+12:20:39,502 |-INFO in ch.qos.logback.core.model.processor.ModelInterpretationContext@2c532cd8 - value "%clr(%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}){faint} %clr(%5p) %clr(44332){magenta} %clr(---){faint} %clr(%applicationName[%15.15t]){faint} %clr(){faint}%clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%wEx" substituted for "${CONSOLE_LOG_PATTERN:-%clr(%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd'T'HH:mm:ss.SSSXXX}}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr(%applicationName[%15.15t]){faint} %clr(${LOG_CORRELATION_PATTERN:-}){faint}%clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}"
+12:20:39,502 |-INFO in ch.qos.logback.core.model.processor.ModelInterpretationContext@2c532cd8 - value "UTF-8" substituted for "${CONSOLE_LOG_CHARSET:-${file.encoding:-UTF-8}}"
+12:20:39,502 |-INFO in ch.qos.logback.core.model.processor.ModelInterpretationContext@2c532cd8 - value "TRACE" substituted for "${CONSOLE_LOG_THRESHOLD:-TRACE}"
+12:20:39,502 |-INFO in ch.qos.logback.core.model.processor.ModelInterpretationContext@2c532cd8 - value "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %5p 44332 --- %applicationName[%t] %-40.40logger{39} : %m%n%wEx" substituted for "${FILE_LOG_PATTERN:-%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd'T'HH:mm:ss.SSSXXX}} ${LOG_LEVEL_PATTERN:-%5p} ${PID:- } --- %applicationName[%t] ${LOG_CORRELATION_PATTERN:-}%-40.40logger{39} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}"
+12:20:39,502 |-INFO in ch.qos.logback.core.model.processor.ModelInterpretationContext@2c532cd8 - value "UTF-8" substituted for "${FILE_LOG_CHARSET:-${file.encoding:-UTF-8}}"
+12:20:39,502 |-INFO in ch.qos.logback.core.model.processor.ModelInterpretationContext@2c532cd8 - value "TRACE" substituted for "${FILE_LOG_THRESHOLD:-TRACE}"
+12:20:39,503 |-INFO in ch.qos.logback.classic.model.processor.LoggerModelHandler - Setting level of logger [org.apache.catalina.startup.DigesterFactory] to ERROR
+12:20:39,504 |-INFO in ch.qos.logback.classic.jul.LevelChangePropagator@294e5088 - Propagating ERROR level on Logger[org.apache.catalina.startup.DigesterFactory] onto the JUL framework
+12:20:39,504 |-INFO in ch.qos.logback.classic.model.processor.LoggerModelHandler - Setting level of logger [org.apache.catalina.util.LifecycleBase] to ERROR
+12:20:39,504 |-INFO in ch.qos.logback.classic.jul.LevelChangePropagator@294e5088 - Propagating ERROR level on Logger[org.apache.catalina.util.LifecycleBase] onto the JUL framework
+12:20:39,504 |-INFO in ch.qos.logback.classic.model.processor.LoggerModelHandler - Setting level of logger [org.apache.coyote.http11.Http11NioProtocol] to WARN
+12:20:39,504 |-INFO in ch.qos.logback.classic.jul.LevelChangePropagator@294e5088 - Propagating WARN level on Logger[org.apache.coyote.http11.Http11NioProtocol] onto the JUL framework
+12:20:39,504 |-INFO in ch.qos.logback.classic.model.processor.LoggerModelHandler - Setting level of logger [org.apache.sshd.common.util.SecurityUtils] to WARN
+12:20:39,504 |-INFO in ch.qos.logback.classic.jul.LevelChangePropagator@294e5088 - Propagating WARN level on Logger[org.apache.sshd.common.util.SecurityUtils] onto the JUL framework
+12:20:39,504 |-INFO in ch.qos.logback.classic.model.processor.LoggerModelHandler - Setting level of logger [org.apache.tomcat.util.net.NioSelectorPool] to WARN
+12:20:39,504 |-INFO in ch.qos.logback.classic.jul.LevelChangePropagator@294e5088 - Propagating WARN level on Logger[org.apache.tomcat.util.net.NioSelectorPool] onto the JUL framework
+12:20:39,504 |-INFO in ch.qos.logback.classic.model.processor.LoggerModelHandler - Setting level of logger [org.eclipse.jetty.util.component.AbstractLifeCycle] to ERROR
+12:20:39,504 |-INFO in ch.qos.logback.classic.jul.LevelChangePropagator@294e5088 - Propagating ERROR level on Logger[org.eclipse.jetty.util.component.AbstractLifeCycle] onto the JUL framework
+12:20:39,504 |-INFO in ch.qos.logback.classic.model.processor.LoggerModelHandler - Setting level of logger [org.hibernate.validator.internal.util.Version] to WARN
+12:20:39,504 |-INFO in ch.qos.logback.classic.jul.LevelChangePropagator@294e5088 - Propagating WARN level on Logger[org.hibernate.validator.internal.util.Version] onto the JUL framework
+12:20:39,504 |-INFO in ch.qos.logback.classic.model.processor.LoggerModelHandler - Setting level of logger [org.springframework.boot.actuate.endpoint.jmx] to WARN
+12:20:39,504 |-INFO in ch.qos.logback.classic.jul.LevelChangePropagator@294e5088 - Propagating WARN level on Logger[org.springframework.boot.actuate.endpoint.jmx] onto the JUL framework
+12:20:39,504 |-INFO in ch.qos.logback.core.model.processor.AppenderModelHandler - Processing appender named [CONSOLE]
+12:20:39,504 |-INFO in ch.qos.logback.core.model.processor.AppenderModelHandler - About to instantiate appender of type [ch.qos.logback.core.ConsoleAppender]
+12:20:39,505 |-INFO in ch.qos.logback.core.model.processor.ImplicitModelHandler - Assuming default type [ch.qos.logback.classic.encoder.PatternLayoutEncoder] for [encoder] property
+12:20:39,506 |-INFO in ch.qos.logback.core.model.processor.ModelInterpretationContext@2c532cd8 - value "%clr(%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}){faint} %clr(%5p) %clr(44332){magenta} %clr(---){faint} %clr(%applicationName[%15.15t]){faint} %clr(){faint}%clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%wEx" substituted for "${CONSOLE_LOG_PATTERN}"
+12:20:39,513 |-WARN in ch.qos.logback.core.model.processor.AppenderModelHandler - Appender named [JSON_CONSOLE] not referenced. Skipping further processing.
+12:20:39,513 |-INFO in ch.qos.logback.classic.model.processor.RootLoggerModelHandler - Setting level of ROOT logger to INFO
+12:20:39,513 |-INFO in ch.qos.logback.classic.jul.LevelChangePropagator@294e5088 - Propagating INFO level on Logger[ROOT] onto the JUL framework
+12:20:39,513 |-INFO in ch.qos.logback.core.model.processor.AppenderRefModelHandler - Attaching appender named [CONSOLE] to Logger[ROOT]
+12:20:39,513 |-INFO in ch.qos.logback.core.model.processor.DefaultProcessor@51972dc7 - End of configuration.
+12:20:39,513 |-INFO in org.springframework.boot.logging.logback.SpringBootJoranConfigurator@3700ec9c - Registering current configuration as safe fallback point
+
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.3.5)
+
+2026-07-05T12:20:39.546+05:30  INFO 44332 --- [url-shortener] [           main] i.p.u.UrlShortenerApplication            : Starting UrlShortenerApplication using Java 25.0.2 with PID 44332 (/Users/deepanshu/Documents/GitHub/frontend/distributed-url-shortener-v2/backend/target/classes started by deepanshu in /Users/deepanshu/Documents/GitHub/frontend/distributed-url-shortener-v2/backend)
+2026-07-05T12:20:39.549+05:30  INFO 44332 --- [url-shortener] [           main] i.p.u.UrlShortenerApplication            : The following 1 profile is active: "local"
+2026-07-05T12:20:39.894+05:30  INFO 44332 --- [url-shortener] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-07-05T12:20:39.894+05:30  INFO 44332 --- [url-shortener] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-05T12:20:39.962+05:30  INFO 44332 --- [url-shortener] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 65 ms. Found 2 JPA repository interfaces.
+2026-07-05T12:20:39.963+05:30  INFO 44332 --- [url-shortener] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-07-05T12:20:39.963+05:30  INFO 44332 --- [url-shortener] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-05T12:20:39.971+05:30  INFO 44332 --- [url-shortener] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 7 ms. Found 5 JPA repository interfaces.
+2026-07-05T12:20:40.199+05:30  INFO 44332 --- [url-shortener] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-07-05T12:20:40.199+05:30  INFO 44332 --- [url-shortener] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-07-05T12:20:40.207+05:30  INFO 44332 --- [url-shortener] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface io.portfolio.urlshortener.analytics.LinkStatsRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-07-05T12:20:40.207+05:30  INFO 44332 --- [url-shortener] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface io.portfolio.urlshortener.analytics.RawClickEventRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-07-05T12:20:40.207+05:30  INFO 44332 --- [url-shortener] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface io.portfolio.urlshortener.analytics.RawLinkEventRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-07-05T12:20:40.207+05:30  INFO 44332 --- [url-shortener] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface io.portfolio.urlshortener.auth.LinkIndexRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-07-05T12:20:40.208+05:30  INFO 44332 --- [url-shortener] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface io.portfolio.urlshortener.auth.UserRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-07-05T12:20:40.208+05:30  INFO 44332 --- [url-shortener] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface io.portfolio.urlshortener.shortener.IdempotencyKeyRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-07-05T12:20:40.208+05:30  INFO 44332 --- [url-shortener] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface io.portfolio.urlshortener.shortener.LinkRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-07-05T12:20:40.208+05:30  INFO 44332 --- [url-shortener] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 4 ms. Found 0 Redis repository interfaces.
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by org.apache.tomcat.jni.Library in an unnamed module (file:/Users/deepanshu/.m2/repository/org/apache/tomcat/embed/tomcat-embed-core/10.1.31/tomcat-embed-core-10.1.31.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+2026-07-05T12:20:40.654+05:30  INFO 44332 --- [url-shortener] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-07-05T12:20:40.661+05:30  INFO 44332 --- [url-shortener] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-07-05T12:20:40.661+05:30  INFO 44332 --- [url-shortener] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.31]
+2026-07-05T12:20:40.689+05:30  INFO 44332 --- [url-shortener] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-07-05T12:20:40.689+05:30  INFO 44332 --- [url-shortener] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1117 ms
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::allocateMemory has been called by io.netty.util.internal.PlatformDependent0$2 (file:/Users/deepanshu/.m2/repository/io/netty/netty-common/4.1.114.Final/netty-common-4.1.114.Final.jar)
+WARNING: Please consider reporting this to the maintainers of class io.netty.util.internal.PlatformDependent0$2
+WARNING: sun.misc.Unsafe::allocateMemory will be removed in a future release
+2026-07-05T12:20:40.990+05:30  INFO 44332 --- [url-shortener] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter disableJwtAuthFilterAutoRegistration was not registered (disabled)
+2026-07-05T12:20:41.066+05:30  INFO 44332 --- [url-shortener] [           main] i.p.urlshortener.auth.ControlDbConfig    : running control-db migrations
+2026-07-05T12:20:41.071+05:30  INFO 44332 --- [url-shortener] [           main] com.zaxxer.hikari.HikariDataSource       : control-db - Starting...
+2026-07-05T12:20:41.074+05:30  INFO 44332 --- [url-shortener] [           main] com.zaxxer.hikari.HikariDataSource       : control-db - Starting...
+2026-07-05T12:20:41.075+05:30  INFO 44332 --- [url-shortener] [           main] com.zaxxer.hikari.HikariDataSource       : control-db - Starting...
+2026-07-05T12:20:41.075+05:30  INFO 44332 --- [url-shortener] [           main] com.zaxxer.hikari.HikariDataSource       : control-db - Starting...
+2026-07-05T12:20:41.076+05:30  WARN 44332 --- [url-shortener] [           main] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'entityManagerFactory' defined in class path resource [io/portfolio/urlshortener/ShardJpaConfig.class]: Failed to initialize dependency 'controlFlyway' of LoadTimeWeaverAware bean 'entityManagerFactory': Error creating bean with name 'controlFlyway' defined in class path resource [io/portfolio/urlshortener/auth/ControlDbConfig.class]: Failed to instantiate [org.flywaydb.core.Flyway]: Factory method 'controlFlyway' threw exception with message: Failed to get driver instance for jdbcUrl=jdbc:h2:mem:control
+2026-07-05T12:20:41.081+05:30  INFO 44332 --- [url-shortener] [           main] o.apache.catalina.core.StandardService   : Stopping service [Tomcat]
+2026-07-05T12:20:41.092+05:30  INFO 44332 --- [url-shortener] [           main] .s.b.a.l.ConditionEvaluationReportLogger : 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2026-07-05T12:20:41.098+05:30 ERROR 44332 --- [url-shortener] [           main] o.s.boot.SpringApplication               : Application run failed
+
+org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'entityManagerFactory' defined in class path resource [io/portfolio/urlshortener/ShardJpaConfig.class]: Failed to initialize dependency 'controlFlyway' of LoadTimeWeaverAware bean 'entityManagerFactory': Error creating bean with name 'controlFlyway' defined in class path resource [io/portfolio/urlshortener/auth/ControlDbConfig.class]: Failed to instantiate [org.flywaydb.core.Flyway]: Factory method 'controlFlyway' threw exception with message: Failed to get driver instance for jdbcUrl=jdbc:h2:mem:control
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:326)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:205)
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:954)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:625)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:754)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:456)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:335)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1363)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1352)
+	at io.portfolio.urlshortener.UrlShortenerApplication.main(UrlShortenerApplication.java:19)
+Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'controlFlyway' defined in class path resource [io/portfolio/urlshortener/auth/ControlDbConfig.class]: Failed to instantiate [org.flywaydb.core.Flyway]: Factory method 'controlFlyway' threw exception with message: Failed to get driver instance for jdbcUrl=jdbc:h2:mem:control
+	at org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:648)
+	at org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:636)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1355)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1185)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:562)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:522)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:337)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:335)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:200)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:313)
+	... 10 common frames omitted
+Caused by: org.springframework.beans.BeanInstantiationException: Failed to instantiate [org.flywaydb.core.Flyway]: Factory method 'controlFlyway' threw exception with message: Failed to get driver instance for jdbcUrl=jdbc:h2:mem:control
+	at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:178)
+	at org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:644)
+	... 20 common frames omitted
+Caused by: java.lang.RuntimeException: Failed to get driver instance for jdbcUrl=jdbc:h2:mem:control
+	at com.zaxxer.hikari.util.DriverDataSource.<init>(DriverDataSource.java:113)
+	at com.zaxxer.hikari.pool.PoolBase.initializeDataSource(PoolBase.java:327)
+	at com.zaxxer.hikari.pool.PoolBase.<init>(PoolBase.java:113)
+	at com.zaxxer.hikari.pool.HikariPool.<init>(HikariPool.java:91)
+	at com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java:111)
+	at org.flywaydb.core.internal.jdbc.JdbcUtils.openConnection(JdbcUtils.java:48)
+	at org.flywaydb.core.internal.jdbc.JdbcConnectionFactory.<init>(JdbcConnectionFactory.java:72)
+	at org.flywaydb.core.FlywayExecutor.execute(FlywayExecutor.java:134)
+	at org.flywaydb.core.Flyway.migrate(Flyway.java:147)
+	at io.portfolio.urlshortener.auth.ControlDbConfig.controlFlyway(ControlDbConfig.java:69)
+	at io.portfolio.urlshortener.auth.ControlDbConfig$$SpringCGLIB$$0.CGLIB$controlFlyway$3(<generated>)
+	at io.portfolio.urlshortener.auth.ControlDbConfig$$SpringCGLIB$$FastClass$$1.invoke(<generated>)
+	at org.springframework.cglib.proxy.MethodProxy.invokeSuper(MethodProxy.java:258)
+	at org.springframework.context.annotation.ConfigurationClassEnhancer$BeanMethodInterceptor.intercept(ConfigurationClassEnhancer.java:348)
+	at io.portfolio.urlshortener.auth.ControlDbConfig$$SpringCGLIB$$0.controlFlyway(<generated>)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:146)
+	... 21 common frames omitted
+Caused by: java.sql.SQLException: No suitable driver
+	at java.sql/java.sql.DriverManager.getDriver(DriverManager.java:269)
+	at com.zaxxer.hikari.util.DriverDataSource.<init>(DriverDataSource.java:105)
+	... 38 common frames omitted
+
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  3.594 s
+[INFO] Finished at: 2026-07-05T12:20:41+05:30
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.springframework.boot:spring-boot-maven-plugin:3.3.5:run (default-cli) on project url-shortener: Process terminated with exit code: 1 -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException
