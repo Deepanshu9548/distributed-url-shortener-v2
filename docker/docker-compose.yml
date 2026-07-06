@@ -13,6 +13,7 @@ x-app-common: &app-common
     CONTROL_DB_USER: shortener
     CONTROL_DB_PASSWORD: shortener
     SPRING_DATA_REDIS_HOST: redis
+    KAFKA_ENABLED: "true"
   depends_on:
     shard1-primary: { condition: service_healthy }
     shard1-replica: { condition: service_healthy }
