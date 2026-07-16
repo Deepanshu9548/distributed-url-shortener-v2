@@ -1,18 +1,45 @@
-target/
+# Compiled class file
 *.class
 *.jar
-!.mvn/wrapper/maven-wrapper.jar
+*.war
+*.ear
 
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+
+# Logs
+*.log
+
+# IDEs
 .idea/
 *.iml
 .vscode/
-.DS_Store
+.classpath
+.project
+.settings/
 
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+
+# Project-specific
 .env
 load-tests/results/
 
+# AI Assistants
+.claude/
+.claude/settings.json
 .claude/settings.local.json
-.claude
 .gemini/*
 !.gemini/context.md
-
