@@ -38,9 +38,7 @@ App via nginx: http://localhost · Prometheus: http://localhost:9090 · Grafana:
 - **Grafana**: http://localhost:3000
 - **Prometheus**: http://localhost:9090
 
-<!-- screenshot: overview.png -->
-<!-- screenshot: cache-and-ratelimit.png -->
-<!-- screenshot: sharding-and-analytics.png -->
+
 
 ## Load Test Results
 
