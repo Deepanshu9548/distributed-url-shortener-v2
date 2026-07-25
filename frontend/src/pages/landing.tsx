@@ -64,7 +64,7 @@ export default function Landing() {
       // Fallback for guest mode or offline API
     }
 
-    // 2. Client-side short code generation (Ultra-compact 4-character Base62)
+    // 2. Ultra-short 4-character Base62 code for 10-15 char total URL length
     if (!shortCode) {
       const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
       shortCode = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
@@ -150,24 +150,22 @@ export default function Landing() {
             <div className="space-y-3">
               {recentLinks.map((link) => {
                 const fullShortUrl = getFullShortUrl(link.shortCode);
-                const compactDisplay = `sh.rt/${link.shortCode}`;
+                const hostName = window.location.host;
+                const cleanDisplay = `${hostName}/#/${link.shortCode}`;
                 return (
                   <div key={link.shortCode} className="flex items-center justify-between p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
                     <div className="flex flex-col text-left overflow-hidden mr-4">
                       <div className="flex items-center gap-2">
-                        <span className="bg-primary/10 text-primary text-xs font-bold px-2 py-0.5 rounded uppercase">
-                          {compactDisplay}
-                        </span>
                         <a 
                           href={fullShortUrl} 
                           target="_blank" 
                           rel="noreferrer"
-                          className="font-medium text-primary hover:underline flex items-center gap-1 text-sm truncate"
+                          className="font-semibold text-primary text-base hover:underline flex items-center gap-1.5 truncate"
                           title="Open short link"
                         >
-                          <LinkIcon className="h-3.5 w-3.5 shrink-0" />
-                          <span className="truncate">{fullShortUrl}</span>
-                          <ExternalLink className="h-3 w-3 shrink-0 opacity-70" />
+                          <LinkIcon className="h-4 w-4 shrink-0" />
+                          <span className="truncate">{cleanDisplay}</span>
+                          <ExternalLink className="h-3.5 w-3.5 shrink-0 opacity-70" />
                         </a>
                       </div>
                       <span className="text-sm text-muted-foreground truncate mt-1" title={link.longUrl}>{link.longUrl}</span>
