@@ -10,9 +10,21 @@ import { Link as LinkIcon, ArrowRight, Copy, ExternalLink } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
+import { normalizeUrl } from '@/lib/validators';
 
 const publicSchema = z.object({
-  longUrl: z.string().url('Invalid URL format. Example: https://example.com').max(8192),
+  longUrl: z.string()
+    .min(1, 'Please enter a web address to shorten')
+    .max(8192, 'URL is too long')
+    .transform(normalizeUrl)
+    .refine((url) => {
+      try {
+        const u = new URL(url);
+        return u.protocol === 'http:' || u.protocol === 'https:';
+      } catch {
+        return false;
+      }
+    }, 'Invalid web address. Example: google.com or https://example.com'),
 });
 
 export default function Landing() {
@@ -36,14 +48,15 @@ export default function Landing() {
 
   const onSubmit = async (data: { longUrl: string }) => {
     let shortCode = '';
+    const normalizedTarget = normalizeUrl(data.longUrl);
 
-    // Attempt API creation if user is authenticated or backend is connected
+    // 1. Attempt API creation if user is logged in
     try {
       if (isAuthenticated()) {
         const res = await api.post('/api/links', {
-          longUrl: data.longUrl,
+          longUrl: normalizedTarget,
         }, {
-          headers: { 'Idempotency-Key': crypto.randomUUID() }
+          headers: { 'Idempotency-Key': typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) }
         });
         shortCode = res.data.shortCode;
       }
@@ -51,7 +64,7 @@ export default function Landing() {
       // Fallback for guest mode or offline API
     }
 
-    // Client-side fallback generation for seamless instant guest mode
+    // 2. Client-side short code generation for guest mode
     if (!shortCode) {
       const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
       shortCode = Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
@@ -59,7 +72,7 @@ export default function Landing() {
 
     const newLink = { 
       shortCode, 
-      longUrl: data.longUrl, 
+      longUrl: normalizedTarget, 
       createdAt: new Date().toISOString() 
     };
 
@@ -70,7 +83,7 @@ export default function Landing() {
     localStorage.setItem('recentLinks', JSON.stringify(updatedLinks));
     try {
       const guestMap = JSON.parse(localStorage.getItem('guestLinksMap') || '{}');
-      guestMap[shortCode] = data.longUrl;
+      guestMap[shortCode] = normalizedTarget;
       localStorage.setItem('guestLinksMap', JSON.stringify(guestMap));
     } catch {
       // Ignore storage error
@@ -105,15 +118,15 @@ export default function Landing() {
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           A lightning-fast, zero-setup URL shortener. 
-          Shorten links instantly as a guest or sign up to manage your custom domain & metrics.
+          Shorten links instantly as a guest or sign up to manage custom domains & analytics.
         </p>
 
         <Card className="w-full max-w-2xl mx-auto shadow-lg border-primary/20">
           <CardContent className="p-2 sm:p-4">
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col sm:flex-row gap-2">
               <Input
-                type="url"
-                placeholder="Paste your long URL here (e.g., https://github.com)..."
+                type="text"
+                placeholder="Paste your long link here (e.g., google.com or https://github.com)..."
                 className="h-14 text-lg bg-transparent border-0 focus-visible:ring-0 px-4"
                 {...register('longUrl')}
               />

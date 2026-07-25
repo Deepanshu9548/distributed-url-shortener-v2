@@ -24,10 +24,20 @@ export type RegisterFormData = z.infer<typeof registerSchema>;
 
 const restrictedAliases = ['api', 'auth', 'actuator', 'swagger-ui', 'metrics', 'health', 'admin'];
 
+export const normalizeUrl = (url: string) => {
+  let trimmed = (url || '').trim();
+  if (!trimmed) return trimmed;
+  if (!/^https?:\/\//i.test(trimmed)) {
+    trimmed = `https://${trimmed}`;
+  }
+  return trimmed;
+};
+
 export const linkSchema = z.object({
   longUrl: z.string()
-    .url('Invalid URL format')
+    .min(1, 'Please enter a URL to shorten')
     .max(8192, 'URL too long')
+    .transform(normalizeUrl)
     .refine((url) => {
       try {
         const u = new URL(url);
@@ -35,7 +45,7 @@ export const linkSchema = z.object({
       } catch {
         return false;
       }
-    }, 'Must be an HTTP(S) URL'),
+    }, 'Invalid website address. Example: google.com or https://example.com'),
   customAlias: z.string()
     .regex(/^[0-9a-zA-Z_-]{4,32}$/, 'Alias must be 4-32 characters (alphanumeric, dash, underscore)')
     .refine((alias) => !restrictedAliases.includes(alias.toLowerCase()), 'This alias is reserved')
