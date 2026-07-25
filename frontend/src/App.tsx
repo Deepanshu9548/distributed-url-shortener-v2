@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import { NavBar } from '@/components/nav-bar';
 import { ProtectedRoute } from '@/components/protected-route';
 import { Toaster } from '@/components/ui/sonner';
@@ -9,6 +9,7 @@ import Register from '@/pages/register';
 import Dashboard from '@/pages/dashboard';
 import LinkNew from '@/pages/link-new';
 import LinkDetail from '@/pages/link-detail';
+import RedirectHandler from '@/pages/redirect-handler';
 import NotFound from '@/pages/not-found';
 
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -16,7 +17,7 @@ import { ErrorBoundary } from '@/components/error-boundary';
 export default function App() {
   return (
     <ErrorBoundary>
-      <BrowserRouter>
+      <HashRouter>
         <div className="min-h-screen flex flex-col bg-background font-sans antialiased">
           <NavBar />
           <main className="flex-1">
@@ -31,6 +32,7 @@ export default function App() {
                 <Route path="/links/:code" element={<LinkDetail />} />
               </Route>
 
+              <Route path="/:code" element={<RedirectHandler />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
@@ -47,7 +49,7 @@ export default function App() {
           </div>
         </footer>
         <Toaster />
-      </BrowserRouter>
+      </HashRouter>
     </ErrorBoundary>
   );
 }
