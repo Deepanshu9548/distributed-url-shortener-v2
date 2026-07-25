@@ -64,10 +64,10 @@ export default function Landing() {
       // Fallback for guest mode or offline API
     }
 
-    // 2. Client-side short code generation for guest mode
+    // 2. Client-side short code generation (Ultra-compact 4-character Base62)
     if (!shortCode) {
       const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      shortCode = Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+      shortCode = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
     }
 
     const newLink = { 
@@ -93,7 +93,7 @@ export default function Landing() {
     reset();
   };
 
-  const getShortUrl = (code: string) => {
+  const getFullShortUrl = (code: string) => {
     const origin = window.location.origin;
     const pathname = window.location.pathname.endsWith('/') 
       ? window.location.pathname 
@@ -102,9 +102,9 @@ export default function Landing() {
   };
 
   const handleCopy = (code: string) => {
-    const shortUrl = getShortUrl(code);
+    const shortUrl = getFullShortUrl(code);
     navigator.clipboard.writeText(shortUrl).then(
-      () => toast.success('Copied short URL to clipboard!'),
+      () => toast.success('Copied short link!'),
       () => toast.error('Failed to copy')
     );
   };
@@ -149,24 +149,31 @@ export default function Landing() {
             <h3 className="text-lg font-semibold mb-4 text-left">Your Recent Shortened Links</h3>
             <div className="space-y-3">
               {recentLinks.map((link) => {
-                const fullShortUrl = getShortUrl(link.shortCode);
+                const fullShortUrl = getFullShortUrl(link.shortCode);
+                const compactDisplay = `sh.rt/${link.shortCode}`;
                 return (
                   <div key={link.shortCode} className="flex items-center justify-between p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
                     <div className="flex flex-col text-left overflow-hidden mr-4">
-                      <a 
-                        href={fullShortUrl} 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="font-medium text-primary hover:underline flex items-center gap-2 truncate"
-                      >
-                        <LinkIcon className="h-4 w-4 shrink-0" />
-                        <span className="truncate">{fullShortUrl}</span>
-                        <ExternalLink className="h-3.5 w-3.5 shrink-0 opacity-70" />
-                      </a>
-                      <span className="text-sm text-muted-foreground truncate" title={link.longUrl}>{link.longUrl}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="bg-primary/10 text-primary text-xs font-bold px-2 py-0.5 rounded uppercase">
+                          {compactDisplay}
+                        </span>
+                        <a 
+                          href={fullShortUrl} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="font-medium text-primary hover:underline flex items-center gap-1 text-sm truncate"
+                          title="Open short link"
+                        >
+                          <LinkIcon className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate">{fullShortUrl}</span>
+                          <ExternalLink className="h-3 w-3 shrink-0 opacity-70" />
+                        </a>
+                      </div>
+                      <span className="text-sm text-muted-foreground truncate mt-1" title={link.longUrl}>{link.longUrl}</span>
                     </div>
                     <Button variant="outline" size="sm" onClick={() => handleCopy(link.shortCode)} className="shrink-0 gap-1.5">
-                      <Copy className="h-4 w-4" /> Copy
+                      <Copy className="h-4 w-4" /> Copy Link
                     </Button>
                   </div>
                 );
