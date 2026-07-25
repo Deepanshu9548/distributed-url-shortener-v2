@@ -38,8 +38,6 @@ App via nginx: http://localhost · Prometheus: http://localhost:9090 · Grafana:
 - **Grafana**: http://localhost:3000
 - **Prometheus**: http://localhost:9090
 
-
-
 ## Load Test Results
 
 *Load testing conducted with JMeter at 10K sustained req/s for 5 minutes against GET /{code}.*
